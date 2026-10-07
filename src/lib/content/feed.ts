@@ -1,3 +1,4 @@
+import { robotsBody } from "@/lib/crawlers";
 import { Feed } from "feed";
 import { profile } from "@/data/profile";
 import { siteUrl } from "@/lib/sites";
@@ -113,5 +114,5 @@ export function buildSitemap(posts: PostSummary[]): string {
 }
 
 export function buildRobots(): string {
-  return `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl("blog", "/sitemap.xml")}\n`;
+  return robotsBody({ sitemap: siteUrl("blog", "/sitemap.xml"), llms: siteUrl("blog", "/llms.txt") });
 }

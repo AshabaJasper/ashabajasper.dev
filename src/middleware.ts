@@ -64,6 +64,7 @@ export const config = {
   // Static files keep their URL on every host. .txt and .xml are not excluded
   // on purpose: robots.txt, sitemap.xml and feed.xml are per-site routes.
   matcher: [
-    "/((?!_next/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf|css|js|map|webmanifest|pdf)$).*)",
+    // The 32-hex .txt file in public/ is the IndexNow key.
+    "/((?!_next/|[a-f0-9]{32}\\.txt$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf|css|js|map|webmanifest|pdf)$).*)",
   ],
 };

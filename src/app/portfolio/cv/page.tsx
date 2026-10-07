@@ -27,6 +27,7 @@ import { awards, certifications, competencies, cvSummary, notableProjects, train
 import { communityHistory, educationHistory, experience, experienceMonths, experiencePeriod, workHistory, type ExperienceEntry } from "@/data/experience";
 import { profile } from "@/data/profile";
 import { pageMetadata } from "@/lib/seo";
+import { breadcrumbSchema, jsonLd, personSchema, profilePageSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = pageMetadata({
   site: "portfolio",
@@ -129,6 +130,10 @@ export default function CvPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(personSchema(), profilePageSchema("/cv", `CV of ${profile.fullName}`), breadcrumbSchema([{ name: "Home", path: "/" }, { name: "CV", path: "/cv" }])) }}
+      />
       <PageHeader
         kicker="CV"
         title={profile.fullName}

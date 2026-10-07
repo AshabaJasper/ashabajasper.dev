@@ -13,6 +13,7 @@ import { formatDate, formatReadingTime, postKicker } from "@/components/blog/for
 import { TocDisclosure, TocRail } from "@/components/blog/toc";
 import { AuthorCard, PostPager, SeriesNav, TagLinks } from "@/components/blog/post-parts";
 import { CommentsSection } from "@/components/blog/comments-section";
+import { PERSON_ID } from "@/lib/structured-data";
 
 /**
  * A post. Rendered on first request and cached for five minutes, so the
@@ -53,8 +54,8 @@ function jsonLd(post: NonNullable<Awaited<ReturnType<typeof getPost>>>): string 
     image: siteUrl("blog", `/og/${post.slug}`),
     keywords: post.tags.join(", "),
     inLanguage: "en-GB",
-    author: { "@type": "Person", name: profile.fullName, url: siteUrl("portfolio", "/about") },
-    publisher: { "@type": "Person", name: profile.fullName, url: siteUrl("portfolio", "/") },
+    author: { "@type": "Person", "@id": PERSON_ID, name: profile.fullName, url: siteUrl("portfolio", "/"), sameAs: Object.values(profile.links) },
+    publisher: { "@type": "Person", "@id": PERSON_ID, name: profile.fullName, url: siteUrl("portfolio", "/") },
     ...(post.series ? { isPartOf: { "@type": "CreativeWorkSeries", name: post.series.name } } : {}),
   };
   // Escape "<" so a title can never close the script element.

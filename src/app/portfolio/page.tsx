@@ -31,7 +31,7 @@ import { featuredWork, sectors, work } from "@/data/work";
 import { getAllPosts } from "@/lib/content/posts";
 import { crossHref } from "@/lib/links";
 import { pageMetadata } from "@/lib/seo";
-import { siteUrl } from "@/lib/sites";
+import { jsonLd, personSchema, profilePageSchema, websiteSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = pageMetadata({
   site: "portfolio",
@@ -41,23 +41,6 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
   type: "profile",
 });
-
-function personJsonLd() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: profile.fullName,
-    alternateName: profile.name,
-    jobTitle: profile.role,
-    url: siteUrl("portfolio", "/"),
-    image: siteUrl("portfolio", profile.avatar.src),
-    email: `mailto:${profile.email}`,
-    sameAs: Object.values(profile.links),
-    address: { "@type": "PostalAddress", addressLocality: "Kampala", addressCountry: "UG" },
-    worksFor: { "@type": "Organization", name: "Persmon Technologies", url: "https://persmontechnologies.com" },
-    alumniOf: { "@type": "CollegeOrUniversity", name: profile.education.school },
-  };
-}
 
 const CV_PDF = "/cv/Ashaba-Joshua-Jasper-CV-2026.pdf";
 
@@ -93,8 +76,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
-        // JSON.stringify output with "<" escaped cannot close the script element.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd()).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(personSchema(), websiteSchema(), profilePageSchema("/", profile.fullName)) }}
       />
 
       {/* Hero */}

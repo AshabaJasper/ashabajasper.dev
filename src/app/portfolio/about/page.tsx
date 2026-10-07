@@ -11,6 +11,7 @@ import { awards, certifications, cvSummary } from "@/data/cv";
 import { highlights } from "@/data/highlights";
 import { profile } from "@/data/profile";
 import { pageMetadata } from "@/lib/seo";
+import { breadcrumbSchema, jsonLd, personSchema, profilePageSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = pageMetadata({
   site: "portfolio",
@@ -60,6 +61,10 @@ export default function AboutPage() {
   const figures = highlights({ year: today.getUTCFullYear(), month: today.getUTCMonth() + 1 });
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(personSchema(), profilePageSchema("/about", `About ${profile.fullName}`), breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }])) }}
+      />
       <PageHeader kicker="About" title="I build practical systems, end to end.">
         <div id="hero-actions" className="mt-8 flex flex-wrap gap-3">
           <Link href="/cv" className={buttonPrimary}>

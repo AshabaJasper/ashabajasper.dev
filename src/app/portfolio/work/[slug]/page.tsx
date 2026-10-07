@@ -16,6 +16,7 @@ import { getAllPosts } from "@/lib/content/posts";
 import { crossHref } from "@/lib/links";
 import { pageMetadata } from "@/lib/seo";
 import { siteUrl } from "@/lib/sites";
+import { breadcrumbSchema, jsonLd, PERSON_ID } from "@/lib/structured-data";
 
 interface CaseStudyProps {
   params: Promise<{ slug: string }>;
@@ -81,8 +82,29 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
   ];
   const diagram = diagrams[item.slug];
 
+  const ld = jsonLd(
+    {
+      "@type": "CreativeWork",
+      name: item.name,
+      headline: study.headline,
+      description: item.summary,
+      url: siteUrl("portfolio", `/work/${item.slug}`),
+      ...(item.url ? { sameAs: item.url } : {}),
+      creator: { "@id": PERSON_ID },
+      author: { "@id": PERSON_ID },
+      keywords: study.stack.join(", "),
+      genre: item.sector,
+      ...(item.year ? { dateCreated: String(item.year) } : {}),
+    },
+    breadcrumbSchema([
+      { name: "Home", path: "/" },
+      { name: "Work", path: "/work" },
+      { name: item.name, path: `/work/${item.slug}` },
+    ]),
+  );
   return (
     <article>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} />
       <header className="relative isolate overflow-hidden">
         <Backdrop className="-z-10" />
         <div className="container-page pt-12 pb-10 sm:pt-20 sm:pb-14">

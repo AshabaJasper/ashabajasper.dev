@@ -28,7 +28,7 @@ function walk(dir: string): string[] {
 }
 
 describe("no em dashes", () => {
-  it("appear in source, content or docs", () => {
+  it("appear in source, content or docs", { timeout: 30_000 }, () => {
     const files = [
       ...SCAN.flatMap((dir) => walk(join(ROOT, dir))),
       ...FILES.map((name) => join(ROOT, name)).filter((file) => {

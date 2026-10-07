@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
+import { IdentityLinks } from "@/components/shared/identity-links";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { CommandCenter } from "@/components/shared/command-center";
 import { ViewTransitions } from "@/components/shared/view-transitions";
@@ -28,6 +29,7 @@ export default async function BlogLayout({ children }: { children: React.ReactNo
       <a href="#main" className="skip-link">
         Skip to content
       </a>
+      <IdentityLinks />
       <SiteHeader site="blog" homeHref={crossHref("blog", "portfolio", "/")} navItems={PRIMARY_NAV.map((item) => ({
         ...item, href: crossHref("blog", item.site, item.path),
       }))} />

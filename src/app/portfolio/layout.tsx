@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
+import { IdentityLinks } from "@/components/shared/identity-links";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { CommandCenter } from "@/components/shared/command-center";
 import { ViewTransitions } from "@/components/shared/view-transitions";
@@ -29,6 +30,7 @@ export default async function PortfolioLayout({ children }: { children: React.Re
       <a href="#main" className="skip-link">
         Skip to content
       </a>
+      <IdentityLinks />
       <SiteHeader site="portfolio" homeHref="/" navItems={PRIMARY_NAV.map((item) => ({
         ...item, href: crossHref("portfolio", item.site, item.path),
       }))} />
