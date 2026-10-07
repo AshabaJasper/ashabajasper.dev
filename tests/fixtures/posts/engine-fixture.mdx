@@ -1,0 +1,79 @@
+---
+title: "Engine fixture: every feature a post may use"
+description: "A test post that exercises headings, code, tables and notes so the blog engine can be checked without the real posts."
+date: 2026-09-01
+updated: 2026-09-15
+tags: [testing, nextjs]
+series:
+  name: Fixture Series
+  part: 1
+---
+
+An opening paragraph with a [relative link](/another-post), an [external link](https://example.com/docs) and `inline code`.
+
+# A stray h1 inside the body
+
+## Getting started
+
+Some text.
+
+## Getting started
+
+The same heading twice gets a numbered id.
+
+### The `money` column
+
+Inline code inside a heading keeps its text.
+
+### Why *integers* & not floats?
+
+Punctuation and emphasis.
+
+#### Getting started
+
+An h4 with a name already used still advances the counter.
+
+## Getting started
+
+Third time.
+
+## Links in [headings](https://example.com) work
+
+## Café, naïve and UTF-8 ✓
+
+```ts title="src/lib/money.ts" {1,3-4}
+export type Minor = number;
+
+export function toMinor(major: number): Minor {
+  return Math.round(major * 100);
+}
+```
+
+```not-a-real-language
+this must render as plain text
+```
+
+```
+no language at all
+```
+
+| Column | Meaning |
+| --- | --- |
+| amount | Integer minor units |
+| currency | ISO 4217 code |
+
+<Note title="Worth knowing">
+
+A note with **bold** text and a [link](https://example.com).
+
+</Note>
+
+> A quotation.
+
+---
+
+1. First
+2. Second
+
+- One
+- Two

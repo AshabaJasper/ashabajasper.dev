@@ -1,0 +1,230 @@
+---
+title: "Self-hosting Next.js on a VPS with Coolify"
+description: "How Jasper OS ships on a git push: a slim standalone image, a one-shot migration service, runtime-only secrets and a backup that refuses to prune."
+date: "2026-10-07"
+tags: ["jasper-os", "nextjs", "docker", "self-hosting", "postgres"]
+series:
+  name: "Building Jasper OS"
+  part: 4
+ogTitle: "Self-hosting Next.js with Coolify"
+---
+
+Until September, a Jasper OS release was a list of commands I ran on the server: back up, pull, rebuild, restart, then apply migrations. Two things about that list were wrong. The order started the new app before its migrations had run. And the deployment guide's advice for migrating, `docker compose exec app npx prisma migrate deploy`, had never worked at all.
+
+I wanted a push to GitHub to be the whole release. I also wanted to keep what a hosted platform would have hidden from me: my own Postgres, my own backups, and no secret sitting in an image layer. This post is how that works now, on a single VPS running Coolify.
+
+## The image: standalone output, two targets
+
+Next.js can trace exactly which files the server needs and copy them into `.next/standalone`. One line in the config turns it on:
+
+```ts title="next.config.ts"
+const nextConfig: NextConfig = {
+  output: "standalone",
+  // @react-pdf ships its own font and layout engines; bundling them breaks
+  // their file lookups, so the server loads the package from node_modules.
+  serverExternalPackages: ["@react-pdf/renderer"],
+};
+```
+
+The Dockerfile is multi-stage. A `deps` stage runs `npm ci`, a `source` stage copies everything and runs `prisma generate`, and from there it splits into two final targets:
+
+| Target | Contains | Used for |
+| --- | --- | --- |
+| `runner` (default) | the standalone server, static assets, the Prisma client | the running app |
+| `tools` | full source, dev dependencies, `tsx`, the Prisma CLI | migrations, seeding, one-off scripts |
+
+The runner is deliberately thin. It runs as a non-root user and starts with `node server.js`:
+
+```dockerfile title="Dockerfile"
+FROM base AS runner
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+RUN addgroup --system --gid 1001 nodejs \
+  && adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Prisma CLI + engines for migrations/seeding inside the container
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+### Why the runner cannot migrate
+
+Look at the comment on those last copies. The intention was to run migrations from the app container, and the guide said so. It never worked. The runner copies the `prisma` package by hand, but not the packages the CLI itself depends on, and the standalone trace has no reason to include them because the server never imports the CLI. Run inside the production container, the CLI stops with `Cannot find module 'effect'`.
+
+The seed and the maintenance scripts fail for a related reason: they run through `tsx` and import from `src/`, and neither exists in the runner. I could have kept copying packages into the server image until it doubled as a toolbox. Instead I split the old builder stage in two, `source` and `builder`, and added a `tools` target, which is simply `source` running as the unprivileged `node` user. The runner stage did not change by a single byte, so the deployed server image did not grow.
+
+### Build-time placeholders
+
+`next build` evaluates the config and some server modules, so it needs values for a few variables. The builder stage gets obviously fake ones:
+
+```dockerfile title="Dockerfile"
+FROM source AS builder
+# Dummy values so `next build` can evaluate config; real values come at runtime.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
+ENV AUTH_SECRET="build-time-placeholder"
+ENV AUTH_TRUST_HOST="true"
+RUN npm run build
+```
+
+These exist only in the builder stage, which is not part of the final image. The runner never sees them, and the real values arrive when the container starts. `.dockerignore` keeps `.env`, `.git` and local backups out of the build context entirely.
+
+## The Coolify application
+
+Coolify has several build packs. I use Docker Compose, pointed at a `docker-compose.coolify.yml` in the repository. It has three services: `db` (Postgres 16), `migrate` and `app`. Coolify's Traefik proxy terminates TLS and forwards the domain assigned to the `app` service to its port 3000. No service publishes a port on the host.
+
+### A one-shot migrate service
+
+The order I used to get wrong by hand is now written down as dependencies:
+
+```yaml title="docker-compose.coolify.yml"
+  migrate:
+    build:
+      context: .
+      target: tools
+    restart: "no"
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    exclude_from_hc: true
+
+  app:
+    build:
+      context: .
+      target: runner
+    expose:
+      - "3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+```
+
+On every deploy, `db` has to pass its `pg_isready` health check, then `migrate` applies pending migrations and exits, and only then does `app` start. Migrations in this project only ever add, so a normal deploy needs nothing from me.
+
+`exclude_from_hc` is a Coolify-specific key. Without it, a service that has exited, which is exactly what a one-shot migration should do, would mark the whole application unhealthy. Coolify strips the key before it runs compose, which is also why a plain `docker compose config` rejects the file.
+
+The app's own health check has a small twist: the runner has no `curl` and no `wget`, so the probe is a one-line `node -e` script that fetches the sign-in page and treats any status under 500 as healthy.
+
+## Secrets only at runtime
+
+Every `${VAR}` in the compose file is an environment variable of the Coolify application, and I set all of them as runtime variables, not build variables. A build variable is passed into the image build, and anything that reaches a build step can end up in a layer. Runtime variables are handed to the container when it starts and are never part of the image.
+
+That covers the database credentials, the Auth.js secret and URL, the jobs secret, the time zone and the optional integrations. The admin password that the seed reads is deliberately not stored there at all.
+
+<Note title="One rule per new variable">
+Each new environment variable goes in four places in the same change: `.env.example`, the compose passthrough, the README table and the deployment guide. A variable that exists in code but not in the compose file arrives as undefined in production, and you find out from a broken feature rather than a failed build.
+</Note>
+
+## Push to deploy
+
+Coolify reads the private repository with a read-only deploy key, and a GitHub webhook on push tells it to rebuild. The webhook is signed with a secret that Coolify checks, and pushes to any branch other than the tracked one are ignored. Changing the tracked branch is a setting in Coolify; the webhook stays as it is.
+
+So a release is `git push`. Coolify builds both targets and brings up the stack in the order above. A failed migration fails the deploy and leaves the app down rather than running it on the wrong schema. I prefer a visible outage to a quiet data problem, and if a migration ever damages data, the fix is the latest backup, which is the next section.
+
+## Backups and scheduled jobs live outside the app
+
+Nothing backs up this database unless I do. That part is two small shell scripts in the server's crontab.
+
+Both have to find containers that move. Coolify names them `<service>-<app-uuid>-<timestamp>`, and the timestamp changes on every deploy, so a hard-coded container name breaks on the next push. The scripts read the application uuid from a file on the server and match by prefix:
+
+```bash title="deploy/coolify/backup.sh"
+set -euo pipefail
+umask 077
+OUT=$HOME/backups
+mkdir -p "$OUT"
+UUID=$(cat "$HOME/<app-uuid-file>")
+DB=$(sudo -n docker ps --format "{{.Names}}" | grep "^db-$UUID" | head -1)
+[ -n "$DB" ] || { echo "$(date -Is) db container not running"; exit 1; }
+STAMP=$(date -u +%Y%m%d-%H%M)
+FILE="$OUT/jasper-os-$STAMP.dump"
+# Credentials come from the container's own environment, never from this file.
+sudo -n docker exec "$DB" sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > "$FILE"
+# A dump this small means something went wrong; keep the old ones in that case.
+[ "$(stat -c %s "$FILE")" -gt 10000 ] || { echo "$(date -Is) $FILE is suspiciously small, not pruning"; exit 1; }
+echo "$(date -Is) wrote $FILE ($(du -h "$FILE" | cut -f1))"
+find "$OUT" -name "jasper-os-2*.dump" -mtime +14 -delete
+```
+
+The size check matters most. A backup job that silently writes empty files and then prunes the good ones is worse than none, because it lets you believe you are covered.
+
+The scheduled jobs (the planner, calendar imports, GitHub activity, rules, digests, the daily brief and housekeeping) run on a 15 minute tick. The app publishes no port, so the request is made from inside the container, where the jobs secret already lives:
+
+```bash title="deploy/coolify/jobs-cron.sh"
+sudo -n docker exec "$APP" node -e '
+fetch("http://127.0.0.1:3000/api/jobs/run?job=all", {
+  method: "POST",
+  headers: { authorization: `Bearer ${process.env.JOBS_SECRET}` },
+  signal: AbortSignal.timeout(280000),
+})
+  .then(async (res) => { /* print one line: each job and ran, skip or failed */ })
+'
+```
+
+The secret appears neither in the script nor in the crontab. Each tick logs one line with each job's name and outcome, never its payload.
+
+| Schedule | Script | What it does |
+| --- | --- | --- |
+| every 15 minutes | `jobs-cron.sh` | calls the jobs endpoint from inside the app container |
+| nightly | `backup.sh` | `pg_dump` in custom format, size check, prunes dumps older than 14 days |
+
+For a push that carries a migration, I run the backup script by hand first.
+
+## Windows-only build quirks
+
+I develop on Windows, and the repository lives in OneDrive. Two things there are worth knowing.
+
+**OneDrive and `.next`.** Now and then a build behaves strangely for no reason the code explains. Deleting `.next` and building again is the first thing to try. Relatedly, a running dev server holds the Prisma engine file, so `prisma generate` fails with `EPERM` until the server is stopped.
+
+**The `EINVAL` warning.** Every Windows production build ends with a warning that it failed to copy traced files into `.next/standalone`, naming a chunk like `[externals]_node:fs_*.js`, and then exits 0. Turbopack names external-module chunks after their specifier, and `node:fs` contains a colon, which is not legal in a Windows filename. NTFS stores the content as an alternate data stream instead, and the standalone tracer's copy cannot read it back. On Linux, where the Docker build runs, colons are ordinary characters and the warning does not appear.
+
+The lesson: a local Windows build proves the code compiles, not that the image works. The image is built on Linux, so that is where verification has to happen.
+
+## Planning a domain move
+
+Jasper OS runs on a subdomain of another domain I use, and its next home is `os.ashabajasper.dev`, next to the rest of my sites. On the Coolify side the move is small: add the new domain to the `app` service, point DNS at the server, change `AUTH_URL` and redeploy. The plan for the old host is a 301 to the same path on the new one, kept for 30 days.
+
+The redirect is for links I do not control: bookmarks, and links inside digest emails that were already sent. A 301 is the right status for a move I do not intend to reverse. Browsers cache permanent redirects aggressively, so once a browser has seen it, the old host is effectively retired for that browser. That is what I want here, and it is exactly why a 301 is the wrong choice for a move you might undo.
+
+### Cookies do not follow
+
+What a redirect cannot move is the sign-in state. The session cookie and the trusted-device cookie from [part 3](/pin-on-a-trusted-device) are both set without a `Domain` attribute. The device cookie, for example:
+
+```ts title="src/lib/auth/device-cookie.ts"
+(await cookies()).set(DEVICE_COOKIE, token, {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/",
+  maxAge: DEVICE_TRUST_SECONDS,
+});
+```
+
+A cookie with no `Domain` is host-only: the browser sends it back to that exact host and nowhere else. When the old host returns a 301, the browser follows it to the new host carrying none of the old cookies, and the new host has never set any. A `Domain` attribute would not help either, because a cookie can only be widened to a parent of the host that set it, never to a different registrable domain.
+
+<Note title="What that means in practice">
+After the move, every browser signs in once with the full password and trusts the device again before the PIN screen comes back. I consider that a feature. A trusted-device token is supposed to belong to one origin, and quietly carrying it to a new one would undo the point of having it.
+</Note>
+
+The parts that do not care about the domain need no change: the jobs tick and the health check both call `127.0.0.1` inside the container, and the webhook belongs to the Coolify application, not to the app's hostname.
+
+## What I would do differently
+
+The backup script only writes to the server's own disk. That protects against a bad migration or a mistaken delete, not against losing the server, so an off-server copy belongs next to it. The crontab also lives outside anything Coolify knows about, so a fresh server needs the two scripts installed by hand. And every deploy builds the `tools` image as well as the runner, which is slower than a release without migrations needs. I accept that cost, because the alternative is remembering when to run migrations, and remembering is exactly what this setup was built to remove.
+
+## Takeaway
+
+Self-hosting Next.js is mostly about being explicit. Keep the server image small and give one-off commands their own image. Encode the release order as service dependencies so the app cannot start on the wrong schema. Hand secrets to containers at runtime only. Back up with a script that refuses to prune when something looks wrong. And when you move domains, redirect the old host, but expect everyone to sign in again.
+
+This is the last part of the series so far. If you are starting here, the earlier parts are [the module registry as a single source of truth](/module-registry-as-single-source-of-truth), [money as integer minor units](/money-as-integer-minor-units) and [a PIN on a trusted device](/pin-on-a-trusted-device).

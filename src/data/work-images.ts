@@ -16,4 +16,53 @@ export interface WorkImage {
   blurDataURL: string;
 }
 
-export const WORK_IMAGES: Partial<Record<string, WorkImage>> = {};
+export const WORK_IMAGES: Partial<Record<string, WorkImage>> = {
+  hms: {
+    base: "/images/work/hms",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAADQAQCdASoQAAoAA4BaJYgCdAEHHlxEYAD+9CU/uLpFYs+bbdjGMV9TVhhUAF0s/pdNn0t2B1RLQIPvivIMwAAA",
+  },
+  "jasper-os": {
+    base: "/images/work/jasper-os",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRi4AAABXRUJQVlA4ICIAAABwAQCdASoQAAoAA4BaJaWZAAGIAAD+9EZOnd0LvJphAAAA",
+  },
+  oms: {
+    base: "/images/work/oms",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRkQAAABXRUJQVlA4IDgAAACwAQCdASoQAAoAA4BaJZACdADbH+qoAP7y/fxlb/XoEQqqix1Figv1T6TMeSoeH+fdcNLynEAAAA==",
+  },
+  "pearl-insights": {
+    base: "/images/work/pearl-insights",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRmQAAABXRUJQVlA4IFgAAAAQAgCdASoQAAoAA4BaJQBYdiIZsua4raHAAP7c/cOzdCTMnoUnzCWSC/1lpldg+AtPP6XLtlCdosKaZJ4kBsUt6gxrkcoWH7/Mz5s6SM+TrflIRNIewAAA",
+  },
+  "sickle-cell-awards-voting": {
+    base: "/images/work/sickle-cell-awards-voting",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRlIAAABXRUJQVlA4IEYAAADwAQCdASoQAAoAA4BaJZQAAudiDfR1w8AA/vI+Do5TquhfAq7Hk3bvzxzWGxJD13EwFBTKhMB01s1Wby3A9SQ6Pc6begAA",
+  },
+  "uganda-bookshop": {
+    base: "/images/work/uganda-bookshop",
+    widths: [640, 960, 1280, 1600],
+    width: 1600,
+    height: 1000,
+    blurDataURL:
+      "data:image/webp;base64,UklGRlgAAABXRUJQVlA4IEwAAAAQAgCdASoQAAoAA4BaJZQCdAEPSqIrGNgAAP72CW8W8yLJTLwETvxk6jxhE6u+MdJbEFlWDVQa0VjpkyDtQ9eGx4nrS0pORNTigAAA",
+  },
+};

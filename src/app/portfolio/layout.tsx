@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { Umami } from "@/components/analytics/umami";
+import { StickyCta } from "@/components/portfolio/sticky-cta";
 import { profile } from "@/data/profile";
 import { siteOrigin, siteUrl } from "@/lib/sites";
 
@@ -28,6 +29,8 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <SiteFooter site="portfolio" />
+      {/* Renders only on the home, work, case study and contact pages, under 768px. */}
+      <StickyCta />
       <Umami />
     </>
   );

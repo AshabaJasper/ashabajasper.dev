@@ -1,0 +1,101 @@
+# ashabajasper.dev as a Coolify application (DEPLOYMENT.md). Every push to `main`
+# rebuilds and redeploys. One `app` service answers for ashabajasper.dev,
+# www.ashabajasper.dev, blog.ashabajasper.dev and admin.ashabajasper.dev.
+#
+# Coolify's Traefik terminates TLS and forwards every domain assigned to the
+# `app` service to its port 3000. No service publishes a port. Every ${VAR} is
+# an Environment Variable of the Coolify application; Coolify writes them to the
+# compose .env, so interpolation works.
+#
+# Order on each deploy:
+#   1. db       postgres becomes healthy (pg_isready)
+#   2. migrate  one-shot `prisma migrate deploy` from the tools image, then exits
+#   3. app      starts only if the migration completed successfully
+# A failed migration fails the deploy and leaves the old app container down
+# rather than running against a schema it does not match.
+#
+# Build-time only: NEXT_PUBLIC_UMAMI_SCRIPT_URL and NEXT_PUBLIC_UMAMI_WEBSITE_ID
+# are build args (they are written into the HTML). Mark them "available at build
+# time" in Coolify. Everything else is runtime only, so no secret is baked into
+# an image.
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${NEXT_PUBLIC_UMAMI_SCRIPT_URL:-}
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
+    restart: unless-stopped
+    logging: *logging
+    expose:
+      - "3000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_SECRET: ${AUTH_SECRET}
+      AUTH_URL: ${AUTH_URL:-https://admin.ashabajasper.dev}
+      AUTH_TRUST_HOST: "true"
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-ashabajasper.dev}
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_TO: ${MAIL_TO:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TZ: ${TZ:-Africa/Kampala}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # The image has no curl or wget. /api/health touches no database.
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # One-shot: applies pending migrations, then exits. Built from the `tools`
+  # target, because the slim runner image has no Prisma CLI.
+  migrate:
+    build:
+      context: .
+      target: tools
+    restart: "no"
+    logging: *logging
+    command: ["npx", "prisma", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      NPM_CONFIG_UPDATE_NOTIFIER: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    exclude_from_hc: true
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ajdev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-ajdev}
+    volumes:
+      - ajdev-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ajdev-pgdata:

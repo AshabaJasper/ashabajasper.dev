@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { Umami } from "@/components/analytics/umami";
 import { profile } from "@/data/profile";
 import { siteOrigin, siteUrl } from "@/lib/sites";
+import "./blog.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin("blog")),

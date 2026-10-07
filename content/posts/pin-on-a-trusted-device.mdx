@@ -1,0 +1,219 @@
+---
+title: "A PIN is only safe on a trusted device"
+description: "How PIN sign-in works in Jasper OS: a short code that is never accepted alone, a device token behind it, and a handful of tries before the password is needed again."
+date: "2026-10-07"
+tags: ["jasper-os", "security", "authentication", "nextjs"]
+series:
+  name: "Building Jasper OS"
+  part: 3
+---
+
+Jasper OS is my private life dashboard. It is built to be opened in passing, often on a phone, and it sits on the public internet behind a proper password. Typing a long password on a phone keyboard several times a day gets old quickly, so I wanted what banking apps give you: a short PIN to get back in.
+
+The problem is that a 4 digit PIN has ten thousand possible values. An 8 digit PIN has a hundred million. Both are trivial for a script to walk through if the login form accepts them on their own. A PIN is not a weak password. It is a different kind of secret, and it only makes sense when something else is doing most of the work.
+
+This post is about that something else, and the small rules around it.
+
+## The rule: no device, no PIN
+
+The whole design rests on one sentence from the top of the PIN module:
+
+```ts title="src/lib/auth/pin.ts"
+/**
+ * A short PIN is only safe because it is never accepted on its own. It works
+ * only together with a trusted-device token, a long random secret that a
+ * browser receives after a full password sign-in.
+ */
+```
+
+A browser earns a trusted-device token in one of two ways: it is the browser where the PIN was set, or, once a PIN exists, it signs in with the full password with "Unlock with my PIN on this device next time" ticked. After that, the login page on that browser greets me with a PIN screen, with the password form one click away. Every other browser only ever sees the password form, and the PIN provider refuses a request without a valid token before it looks at the PIN at all.
+
+So the PIN is not the lock. The device token is the lock, and the PIN is a short check that the person holding the device is me.
+
+### The token itself
+
+The token is 32 random bytes from `node:crypto`, encoded as base64url. The raw value goes into a cookie and nowhere else. The database stores only its SHA-256 hash:
+
+```ts title="src/lib/auth/devices.ts"
+export function hashDeviceToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export async function createTrustedDevice(userId: string, userAgent: string | null, now = new Date()) {
+  const token = randomBytes(32).toString("base64url");
+  const device = await prisma.trustedDevice.create({
+    data: {
+      userId,
+      tokenHash: hashDeviceToken(token),
+      label: deviceLabel(userAgent),
+      lastUsedAt: now,
+      expiresAt: new Date(now.getTime() + DEVICE_TRUST_MS),
+    },
+  });
+  // audit log entry, then return the raw token for the cookie
+  return { token, deviceId: device.id };
+}
+```
+
+A fast hash is the right tool here, and that surprises people who have learned "always use bcrypt". Slow hashes exist to protect low-entropy secrets that humans choose. A 256-bit random value cannot be guessed, so the only job of the hash is to make a database dump useless for signing in. SHA-256 does that, and it lets me look the device up by a unique index on `tokenHash` instead of scanning rows. The app already stores its agent API keys the same way.
+
+The label ("Chrome on Android", "Safari on iPhone or iPad") comes from the User-Agent header. It is only ever displayed in the device list in settings, never trusted for anything.
+
+### The cookie
+
+```ts title="src/lib/auth/device-cookie.ts"
+export async function writeDeviceToken(token: string) {
+  (await cookies()).set(DEVICE_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: DEVICE_TRUST_SECONDS,
+  });
+}
+```
+
+`httpOnly` means no page script can read the token, so a script injection bug cannot copy it out. `secure` keeps it off plain HTTP in production. `sameSite: "lax"` keeps it off cross-site form posts while still sending it when I follow a link to the app. It is scoped to the whole site because the login page reads it and the unlock action uses it.
+
+It is worth being clear about what the cookie is not: it is not a session. On its own it opens nothing. It only lets this browser show the PIN screen.
+
+## The PIN
+
+### Rules that refuse the obvious
+
+The PIN is 4 to 8 digits. The rules are deliberately few, because every rule shrinks the space an attacker has to search too. I refuse only the patterns people actually pick first: one digit repeated, and straight runs.
+
+```ts title="src/lib/auth/pin.ts"
+export function pinProblem(pin: string): string | null {
+  if (!/^\d+$/.test(pin)) return "Use digits only";
+  if (pin.length < PIN_MIN_LENGTH) return `Use at least ${PIN_MIN_LENGTH} digits`;
+  if (pin.length > PIN_MAX_LENGTH) return `Use at most ${PIN_MAX_LENGTH} digits`;
+  if (/^(\d)\1+$/.test(pin)) return "Avoid repeating one digit";
+  if (isStraightRun(pin)) return "Avoid a straight run like 1234";
+  return null;
+}
+
+/** 1234, 45678, 9876, and runs that wrap through zero like 7890. */
+function isStraightRun(pin: string): boolean {
+  const digits = [...pin].map(Number);
+  const step = (direction: 1 | -1) =>
+    digits.every((d, i) => i === 0 || d === (digits[i - 1] + direction + 10) % 10);
+  return step(1) || step(-1);
+}
+```
+
+The `+ 10) % 10` is the detail I like. It treats the digits as a ring, so `7890` and `2109` count as runs just like `1234` and `9876`. On a phone keypad those wrapping runs are just as easy to type, so they are just as likely to be chosen.
+
+The tests pin this down from both sides: runs up, down and through zero are refused, and near-runs such as `1235` or `1357` are accepted. Rejecting things that only look patterned would be annoying without making anything safer. The regex for digits also refuses non-ASCII numerals, which the test covers with Arabic-Indic digits.
+
+### Stored as bcrypt, never anywhere else
+
+The PIN is hashed with bcrypt at a cost factor of 12, and only the hash is stored. Here a slow hash is the right tool, but I do not pretend it is enough on its own. A four digit PIN has so few possible values that an offline search against a leaked hash would still finish in hours at most. bcrypt buys time; the device token is what makes a recovered PIN useless. The PIN is never written to a file, a log, the seed script or the environment.
+
+Setting or changing the PIN needs the current password. A PIN is a second way into the account, and only the account owner should be able to add one.
+
+## Five tries, counted per device
+
+Wrong PINs are counted on the device record, not on the account. After five wrong tries in a row, that device is revoked, its cookie is cleared and the browser goes back to the password form. A correct PIN resets the count. This is the heart of `verifyPinOnDevice`, which runs only after the token has matched a usable device:
+
+```ts title="src/lib/auth/devices.ts"
+// Anything that is not plausibly a PIN still costs a try, so garbage cannot probe for free.
+const matches = pinProblem(pin) === null && (await bcrypt.compare(pin, device.user.pinHash!));
+
+if (!matches) {
+  const updated = await prisma.trustedDevice.update({
+    where: { id: device.id },
+    data: { failedPinCount: { increment: 1 } },
+    select: { failedPinCount: true },
+  });
+  const locked = updated.failedPinCount >= MAX_PIN_FAILURES;
+  if (locked) {
+    await prisma.trustedDevice.update({ where: { id: device.id }, data: { revokedAt: now } });
+  }
+  // audit log entry: auth.pin.failed or auth.pin.locked
+  return { ok: false, locked, triesLeft: Math.max(0, MAX_PIN_FAILURES - updated.failedPinCount) };
+}
+```
+
+Two small things in there matter. The count uses the database's own `increment` rather than reading a number and writing it back, so two wrong tries can never overwrite each other's count. And input that is not even a plausible PIN still costs a try, so nobody gets to probe the endpoint with garbage for free.
+
+The arithmetic is the point. Someone who picks up my unlocked phone gets five guesses out of at least ten thousand. Someone without the device gets no guesses at all.
+
+<Note title="Why PIN failures do not touch the password lockout">
+The password form has its own limit: five failures for one email within fifteen minutes pause password sign-in. PIN failures are deliberately not recorded there. If they were, someone holding my phone could burn the password attempts too and lock me out of the one way back in. The two counters protect different things, so they stay separate.
+</Note>
+
+## Trust that slides, and ends
+
+A device stays trusted for 180 days after it was last used. Every successful PIN unlock resets the failure count to zero and pushes `expiresAt` another 180 days out. A phone I use daily stays trusted; an old laptop in a drawer quietly stops being one.
+
+A device stops being usable for the PIN screen when any of these is true, and the pure function that decides it is tested on its own:
+
+```ts title="src/lib/auth/pin.ts"
+export function isDeviceUsable(device: DeviceState, now: Date): boolean {
+  if (device.revokedAt) return false;
+  if (device.expiresAt.getTime() <= now.getTime()) return false;
+  return device.failedPinCount < MAX_PIN_FAILURES;
+}
+```
+
+### What changes on the other devices
+
+- **Changing the PIN** revokes every trusted device, then trusts the browser the change was made from. A new PIN really does shut the old one out everywhere else.
+- **Changing the password** revokes every trusted device except the current one. If I change my password because I think something is wrong, every other browser has to prove itself with the new password before it sees a PIN screen again.
+- **Removing the PIN** revokes every device and clears the cookie on the current browser.
+- **Revoking one device** from the settings device list works on its own, and if it is the current browser its cookie is cleared too.
+- **Signing out** leaves the device trusted on purpose, so the PIN screen is what greets me next time.
+
+## A shorter session for a shorter secret
+
+Sessions are JWTs, and the expiry depends on how I signed in:
+
+```ts title="src/lib/auth.config.ts"
+const REMEMBERED_SESSION_MS = 90 * DAY_MS;
+const SHORT_SESSION_MS = 1 * DAY_MS;
+/** A PIN sign-in is quick to repeat, so it lasts a week rather than ninety days. */
+const PIN_SESSION_MS = 7 * DAY_MS;
+
+// in the jwt callback
+token.sessionExpiry =
+  Date.now() + (viaPin ? PIN_SESSION_MS : rememberMe ? REMEMBERED_SESSION_MS : SHORT_SESSION_MS);
+```
+
+The reasoning is simple. A remembered password session can be long because getting it required the full password. A PIN session came from a weaker proof, and repeating it costs four to eight taps, so there is no reason for it to last as long.
+
+## The threat model in one table
+
+| Threat | What stops it |
+| --- | --- |
+| Script guessing PINs from the internet | No trusted-device token, no PIN attempt. The token is 32 random bytes. |
+| Someone with my phone guessing the PIN | Five wrong tries, then the device is revoked and needs the password. |
+| Database dump | Device tokens stored as SHA-256, PIN and password as bcrypt. No value in it can be presented to sign in. |
+| Injected script reading the token | The cookie is `httpOnly`. |
+| Using the PIN to lock me out of the password | PIN failures are counted per device, not against the password limit. |
+| A PIN or password I think has leaked | Changing either revokes the other trusted devices. |
+| A forgotten old laptop | Trust lapses 180 days after last use. |
+
+## Timing, and where it matters
+
+The password path has the classic protection. When an email does not exist, it still runs a bcrypt comparison against a fixed dummy hash, so the response time does not reveal whether an account exists. Both branches cost one bcrypt comparison.
+
+The PIN path needs less of that. The device token is never compared as a string in application code: it is hashed and looked up by a unique index, so there is no early-exit comparison of the secret to time. The PIN itself is compared with `bcrypt.compare`. A malformed PIN skips bcrypt and returns sooner, which tells the caller only that their own input was malformed, and it still costs a try.
+
+## What I would do differently
+
+Writing this up made me read the code again with fresh eyes, and two trade-offs stand out.
+
+<Note title="Honest gaps">
+The cookie's own lifetime is set once, when the device is trusted, and is not refreshed on unlock. So the browser drops it 180 days after it was written, even though the server keeps sliding the trust forward. A phone I use every day still has to sign in with the password twice a year. Rewriting the cookie on each successful unlock would fix that.
+
+Revoking a device stops its PIN screen, but it does not end a session that browser already holds, because sessions are signed JWTs with nothing on the server to cancel. A PIN session lasts at most a week, which bounds the damage, but a server-side session store would allow a real "sign out everywhere".
+</Note>
+
+Neither undoes the main property: without the device token there is nothing to guess. But they are the next changes I would make.
+
+## Takeaway
+
+A PIN is fine on the internet when it is never the only thing being checked. Put a long random secret in an `httpOnly` cookie, store only its hash, count wrong PINs against that device, revoke it after a handful, and let trust expire with disuse. Then the PIN only has to stop someone holding the device for five guesses, which a short number can do.
+
+Next in the series: [self-hosting Next.js on Coolify](/self-hosting-nextjs-on-coolify). If you missed the earlier parts, start with [the module registry as a single source of truth](/module-registry-as-single-source-of-truth) and [money as integer minor units](/money-as-integer-minor-units).
