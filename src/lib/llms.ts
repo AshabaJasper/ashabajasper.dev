@@ -19,7 +19,7 @@ function identity(): string {
   return [
     `# ${profile.fullName}`,
     "",
-    `> ${profile.fullName} (also written ${profile.name}) is a ${profile.headline.toLowerCase().replace(/, /g, ", ")} based in ${profile.location}. ${profile.heroLine}`,
+    `> ${profile.fullName} (also written ${profile.name}) is a software engineer and data scientist based in ${profile.location}. Roles: ${profile.headline}. He builds data, AI and business systems for East African organisations.`,
     "",
     `- Current roles: ${profile.currently.map((c) => `${c.role}, ${c.name}`).join("; ")}`,
     `- Education: ${profile.education.degree}, GPA ${profile.education.gpa}, ${profile.education.school}`,
