@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens for ashabajasper.dev. Editorial, quiet, one accent.
+ * See DESIGN.md before changing anything here.
+ */
+:root {
+  --radius: 0.75rem;
+
+  --background: #fafaf8;
+  --foreground: #1b1f23;
+  --card: #ffffff;
+  --card-foreground: #1b1f23;
+  --popover: #ffffff;
+  --popover-foreground: #1b1f23;
+  --primary: #137c72;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f1ee;
+  --secondary-foreground: #1b1f23;
+  --muted: #f0f1ee;
+  --muted-foreground: #5f6973;
+  --accent: #e3f1ee;
+  --accent-foreground: #0d5c55;
+  --destructive: #b42318;
+  --border: #e6e8ea;
+  --input: #d6dade;
+  --ring: #137c72;
+
+  /* Editorial extras */
+  --rule: #e6e8ea;
+  --ink-soft: #3b434b;
+  --link: #137c72;
+  --link-hover: #0d5c55;
+  --highlight: #e3f1ee;
+  --code-bg: #f3f4f1;
+}
+
+.dark {
+  --background: #121416;
+  --foreground: #e8eaec;
+  --card: #1a1d20;
+  --card-foreground: #e8eaec;
+  --popover: #1a1d20;
+  --popover-foreground: #e8eaec;
+  --primary: #8bd6c5;
+  --primary-foreground: #0b2e29;
+  --secondary: #1f2327;
+  --secondary-foreground: #e8eaec;
+  --muted: #1f2327;
+  --muted-foreground: #a3adb6;
+  --accent: #173a35;
+  --accent-foreground: #bdebdf;
+  --destructive: #f97066;
+  --border: #2a2f34;
+  --input: #343a40;
+  --ring: #8bd6c5;
+
+  --rule: #2a2f34;
+  --ink-soft: #c9cfd4;
+  --link: #8bd6c5;
+  --link-hover: #bdebdf;
+  --highlight: #173a35;
+  --code-bg: #181b1e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-rule: var(--rule);
+  --color-ink-soft: var(--ink-soft);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-highlight: var(--highlight);
+  --color-code-bg: var(--code-bg);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-reveal: reveal 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--highlight);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small uppercase mono label used above section headings and in metadata. */
+  .kicker {
+    @apply font-mono text-[0.72rem] font-medium tracking-[0.14em] text-muted-foreground uppercase;
+  }
+
+  /* Body links inside running text: accent colour, quiet underline that firms up on hover. */
+  .link {
+    @apply text-link underline decoration-current/30 decoration-1 underline-offset-[3px] transition-colors hover:text-link-hover hover:decoration-current;
+  }
+
+  /* The skip link that appears on keyboard focus. */
+  .skip-link {
+    @apply bg-foreground text-background sr-only z-[100] rounded-md px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3;
+  }
+
+  /* Page container: 1120px content, 16px phone gutters, 24px tablet, 32px desktop. */
+  .container-page {
+    @apply mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Staggered entrance; each element sets --reveal-delay. No motion when reduced. */
+  .reveal {
+    animation: var(--animate-reveal);
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+}

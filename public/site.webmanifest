@@ -1,0 +1,15 @@
+{
+  "name": "Ashaba Jasper",
+  "short_name": "Ashaba Jasper",
+  "description": "Software engineer and data scientist in Kampala, building data, AI and business systems for East African organisations.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#fafaf8",
+  "theme_color": "#137c72",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

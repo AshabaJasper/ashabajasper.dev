@@ -1,0 +1,16 @@
+# Local development database only. Production runs docker-compose.coolify.yml.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ajdev
+      POSTGRES_PASSWORD: ajdev_dev_password
+      POSTGRES_DB: ajdev
+    ports:
+      - "127.0.0.1:${AJDEV_DB_PORT:-5435}:5432"
+    volumes:
+      - ajdev_dev_pgdata:/var/lib/postgresql/data
+
+volumes:
+  ajdev_dev_pgdata:
