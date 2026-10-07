@@ -6,6 +6,7 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   CalendarRange,
+  Download,
   FolderGit2,
   GraduationCap,
   HeartHandshake,
@@ -36,6 +37,7 @@ export const metadata: Metadata = pageMetadata({
   type: "profile",
 });
 
+const PDF_PATH = "/cv/Ashaba-Joshua-Jasper-CV-2026.pdf";
 
 const SECTION_ICON: Record<string, LucideIcon> = {
   profile: UserRound,
@@ -166,7 +168,13 @@ export default function CvPage() {
         {/* id="hero-actions": the call to action in the first viewport. */}
         <div id="hero-actions" className="mt-8 flex flex-wrap gap-3 print:hidden">
           <Magnetic>
-            <EmailLink placement="cv" className={buttonPrimary}>
+            <a href={PDF_PATH} download className={buttonPrimary} data-no-transition>
+              <Download aria-hidden className="size-4" strokeWidth={2} />
+              Download CV (PDF)
+            </a>
+          </Magnetic>
+          <Magnetic>
+            <EmailLink placement="cv" className={buttonSecondary}>
               <Mail aria-hidden className="size-4" strokeWidth={1.75} />
               Email me
             </EmailLink>
