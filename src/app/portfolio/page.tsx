@@ -6,13 +6,10 @@ import {
   ArrowRight,
   BrainCircuit,
   BriefcaseBusiness,
-  Building2,
-  CalendarRange,
   ChartNoAxesCombined,
   Code,
   Database,
   Download,
-  Layers,
   Mail,
   Map,
   PenLine,
@@ -26,7 +23,6 @@ import { WorkMapSection } from "@/components/portfolio/work-map-section";
 import { ArrowLink, SectionHeading, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
 import { formatDate } from "@/components/portfolio/format";
 import { Backdrop } from "@/components/shared/backdrop";
-import { KbdHint } from "@/components/shared/kbd-hint";
 import { Magnetic } from "@/components/shared/motion";
 import { experience, experiencePeriod } from "@/data/experience";
 import { profile } from "@/data/profile";
@@ -80,9 +76,9 @@ export default async function HomePage() {
   const now = { year: today.getUTCFullYear(), month: today.getUTCMonth() + 1 };
   const figures = byTheNumbers(now);
   const glance = [
-    { text: `${work.length} projects shipped`, icon: Layers },
-    { text: `${sectors.length} sectors`, icon: Building2 },
-    { text: `${yearsShipping(now)}+ years building`, icon: CalendarRange },
+    { value: String(work.length), label: "Projects shipped" },
+    { value: String(sectors.length), label: "Sectors" },
+    { value: `${yearsShipping(now)}+`, label: "Years building" },
   ];
   const allPosts = await getAllPosts();
   const posts = allPosts.slice(0, 3);
@@ -106,15 +102,16 @@ export default async function HomePage() {
         <div data-parallax="0.35" style={{ "--speed": 0.35 } as React.CSSProperties} className="absolute inset-0 -z-10">
           <Backdrop />
         </div>
-        <div className="container-page grid grid-cols-[minmax(0,1fr)] items-center gap-x-12 gap-y-14 pt-10 pb-16 sm:pt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:pt-20 lg:pb-24">
+        <div className="container-page grid grid-cols-[minmax(0,1fr)] items-center gap-x-12 gap-y-14 pt-10 pb-16 sm:pt-16 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:pt-20 lg:pb-24">
           <div>
+            {/* Identity first, once: photo, name, where. */}
             <div className="reveal flex items-center gap-4">
-              <div className="ring-primary/60 ring-offset-background relative size-16 shrink-0 overflow-hidden rounded-2xl ring-2 ring-offset-2 transition-transform duration-300 hover:-rotate-3 hover:scale-105 sm:size-20">
-                <Image src={profile.avatar.src} alt={profile.avatar.alt} fill priority sizes="80px" className="object-cover" />
+              <div className="ring-primary/50 ring-offset-background relative size-14 shrink-0 overflow-hidden rounded-full ring-2 ring-offset-2 sm:size-16">
+                <Image src={profile.avatar.src} alt={profile.avatar.alt} fill priority sizes="64px" className="object-cover" />
               </div>
               <div>
-                <p className="text-foreground text-[0.95rem] font-medium">{profile.fullName}</p>
-                <p className="kicker mt-1 flex items-center gap-2.5">
+                <p className="text-foreground text-[1.05rem] font-semibold tracking-[-0.01em]">{profile.name}</p>
+                <p className="text-muted-foreground mt-0.5 flex items-center gap-2 font-mono text-[0.74rem]">
                   <span aria-hidden className="relative flex size-2">
                     <span className="bg-primary absolute inset-0 animate-ping rounded-full opacity-60 motion-reduce:hidden" />
                     <span className="bg-primary relative size-2 rounded-full" />
@@ -123,37 +120,46 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
-            <h1 id="hero-title" className="font-display mt-6 text-[clamp(3.6rem,12.5vw,8.6rem)] leading-[0.86] tracking-[-0.055em]">
+
+            {/* The promise is the headline; the name already sits above it. */}
+            <h1 id="hero-title" className="font-display mt-9 text-[clamp(2.5rem,5.4vw,4.5rem)] leading-[1] tracking-[-0.045em]">
+              <span className="sr-only">{profile.name}: </span>
               <span className="rise-line" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
-                <span>Ashaba</span>
+                <span>I build data,</span>
               </span>
-              <span className="rise-line" style={{ "--reveal-delay": "160ms" } as React.CSSProperties}>
+              <span className="rise-line" style={{ "--reveal-delay": "140ms" } as React.CSSProperties}>
+                <span>AI and business</span>
+              </span>
+              <span className="rise-line" style={{ "--reveal-delay": "220ms" } as React.CSSProperties}>
                 <span>
-                  Jasper<span className="text-primary">.</span>
+                  systems that <span className="text-primary">ship.</span>
                 </span>
               </span>
             </h1>
+
             <p
-              className="reveal text-foreground mt-7 flex flex-wrap gap-2 font-mono text-[0.78rem] leading-relaxed sm:text-[0.82rem]"
+              className="reveal text-muted-foreground mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[0.8rem]"
               style={{ "--reveal-delay": "300ms" } as React.CSSProperties}
             >
               {ROLES.map(({ label, icon: Icon }, i) => (
-                <span key={label} className="border-rule bg-card/70 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5">
-                  <Icon aria-hidden className="text-primary size-3.5" strokeWidth={2} />
+                <span key={label} className="text-foreground inline-flex items-center gap-1.5">
+                  <Icon aria-hidden className="text-primary size-4" strokeWidth={1.75} />
                   {label}
                   {i < ROLES.length - 1 ? <span className="sr-only">,</span> : null}
                 </span>
               ))}
             </p>
             <p
-              className="reveal text-ink-soft mt-5 max-w-[46ch] text-[1.08rem] leading-[1.55] sm:text-[1.2rem]"
+              className="reveal text-ink-soft mt-4 max-w-[52ch] text-[1.05rem] leading-[1.6] sm:text-[1.12rem]"
               style={{ "--reveal-delay": "360ms" } as React.CSSProperties}
             >
-              {profile.heroLine}
+              Most recently clinical AI and data systems for a US radiology network. Before that, hotel, retail and civic
+              data platforms for organisations across East Africa.
             </p>
+
             <div
               id="hero-actions"
-              className="reveal mt-8 flex flex-wrap items-center gap-3"
+              className="reveal mt-9 flex flex-wrap items-center gap-3"
               style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
             >
               <Magnetic>
@@ -173,19 +179,20 @@ export default async function HomePage() {
                 <ArrowDown aria-hidden className="text-primary size-4 transition-transform group-hover:translate-y-0.5" strokeWidth={2} />
               </a>
             </div>
-            <ul
-              className="reveal text-muted-foreground mt-8 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[0.76rem]"
+
+            <dl
+              className="reveal border-rule mt-11 grid max-w-[30rem] grid-cols-3 border-t pt-6"
               style={{ "--reveal-delay": "520ms" } as React.CSSProperties}
-              aria-label="At a glance"
             >
-              {glance.map(({ text, icon: Icon }) => (
-                <li key={text} className="inline-flex items-center gap-2">
-                  <Icon aria-hidden className="text-primary size-4" strokeWidth={1.75} />
-                  {text}
-                </li>
+              {glance.map(({ value, label }) => (
+                <div key={label} className="flex flex-col-reverse">
+                  <dt className="text-muted-foreground mt-2 font-mono text-[0.72rem]">{label}</dt>
+                  <dd className="font-display text-foreground text-[2rem] leading-none tracking-[-0.03em] sm:text-[2.4rem]">
+                    {value}
+                  </dd>
+                </div>
               ))}
-            </ul>
-            <KbdHint className="reveal mt-6" />
+            </dl>
           </div>
 
           <div id="terminal" className="reveal scroll-mt-24" style={{ "--reveal-delay": "250ms" } as React.CSSProperties}>
