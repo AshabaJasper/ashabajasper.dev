@@ -13,6 +13,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Lets several local dev servers run side by side (NEXT_DIST_DIR=.next-blog npx next dev -p 3102).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
