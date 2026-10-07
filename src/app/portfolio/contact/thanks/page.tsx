@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Download, LayoutGrid, PenLine } from "lucide-react";
+import { ArrowRight, FileText, LayoutGrid, PenLine } from "lucide-react";
 import { Backdrop } from "@/components/shared/backdrop";
 import { profile } from "@/data/profile";
 import { work } from "@/data/work";
@@ -37,12 +37,12 @@ export default function ContactThanksPage() {
       external: true,
     },
     {
-      title: "Download the CV",
-      text: "Experience, projects and skills on one PDF.",
-      href: "/cv/ashaba-jasper-cv.pdf",
-      icon: Download,
+      title: "Read the CV",
+      text: "Experience, projects and skills, in one place.",
+      href: "/cv",
+      icon: FileText,
       external: false,
-      download: true,
+      download: false,
     },
   ];
 

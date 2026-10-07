@@ -63,8 +63,7 @@ locally and what changed.
 - **17:** still not applicable. The redesign adds only `sessionStorage` (terminal intro
   seen this session, sticky bar dismissed) and the existing `localStorage` theme. No
   cookies on the public hosts.
-- **20:** `public/cv/ashaba-jasper-cv.pdf` is printed from `/cv` by
-  `scripts/generate-cv-pdf.mjs`; the owner's original CV file is not published.
+- **20:** no CV file is offered for download (owner decision, 8 October 2026); the CV is the `/cv` page.
 
 ## Launch blockers and owner inputs
 

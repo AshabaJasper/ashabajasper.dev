@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ArrowUpRight, BrainCircuit, ChartColumn, Code, Database, Download, Mail, MessageSquareText, ShoppingCart, Smartphone, Sparkles, Workflow } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, BrainCircuit, ChartColumn, Code, Database, FileText, Mail, MessageSquareText, ShoppingCart, Smartphone, Sparkles, Workflow } from "lucide-react";
 import { ContactForm } from "@/components/portfolio/contact-form";
 import { CopyEmailButton, KampalaClock } from "@/components/portfolio/contact-widgets";
 import { EmailLink } from "@/components/portfolio/email-link";
@@ -16,7 +17,6 @@ export const metadata: Metadata = pageMetadata({
     "Contact Ashaba Jasper about a data, AI or software project: email ashabajasper@gmail.com or send a message through the form. Based in Kampala, Uganda.",
 });
 
-const CV_PDF = "/cv/ashaba-jasper-cv.pdf";
 
 /** Drawn from the CV's core competencies and the kinds of work in the portfolio. */
 const HELP_WITH = [
@@ -73,13 +73,13 @@ export default function ContactPage() {
             </li>
             <li data-reveal style={{ "--i": 1 } as React.CSSProperties} className={card}>
               <span aria-hidden className={iconBox}>
-                <Download className="size-5" strokeWidth={1.75} />
+                <FileText className="size-5" strokeWidth={1.75} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-muted-foreground block text-[0.8rem]">Full CV, PDF</span>
-                <a href={CV_PDF} download data-no-transition className="text-foreground block font-medium after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
-                  Download my CV
-                </a>
+                <span className="text-muted-foreground block text-[0.8rem]">Experience, projects, skills</span>
+                <Link href="/cv" className="text-foreground block font-medium after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
+                  Read my CV
+                </Link>
               </span>
               <ArrowUpRight aria-hidden className="text-muted-foreground group-hover:text-primary size-5 shrink-0 transition-colors" strokeWidth={1.75} />
             </li>

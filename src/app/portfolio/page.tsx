@@ -9,7 +9,7 @@ import {
   ChartNoAxesCombined,
   Code,
   Database,
-  Download,
+  FileText,
   Mail,
   Map,
   PenLine,
@@ -59,7 +59,6 @@ function personJsonLd() {
   };
 }
 
-const CV_PDF = "/cv/ashaba-jasper-cv.pdf";
 
 const ROLES = [
   { label: "Data Scientist", icon: Database },
@@ -169,10 +168,10 @@ export default async function HomePage() {
                 </EmailLink>
               </Magnetic>
               <Magnetic>
-                <a href={CV_PDF} download className={buttonSecondary} data-no-transition>
-                  <Download aria-hidden className="size-4" strokeWidth={2} />
-                  Download CV
-                </a>
+                <Link href="/cv" className={buttonSecondary}>
+                  <FileText aria-hidden className="size-4" strokeWidth={2} />
+                  View CV
+                </Link>
               </Magnetic>
               <a href="#work" className="group text-foreground inline-flex min-h-11 items-center gap-2 px-2 text-[0.92rem] font-medium">
                 <span className="decoration-primary underline-offset-4 group-hover:underline">See the work</span>
@@ -270,11 +269,6 @@ export default async function HomePage() {
                 Read the full CV
                 <ArrowRight aria-hidden className="size-4" strokeWidth={2} />
               </Link>
-              <a href={CV_PDF} download className={buttonSecondary} data-no-transition>
-                <Download aria-hidden className="size-4" strokeWidth={2} />
-                PDF
-                <span className="sr-only">, download the CV</span>
-              </a>
             </div>
           </div>
           <ol className="border-rule border-t">
