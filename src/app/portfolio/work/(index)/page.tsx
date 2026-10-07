@@ -11,7 +11,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/work",
   title: "Work",
   description:
-    "All 48 projects by Ashaba Jasper: hotel, operations and civic data systems, online stores, mobile apps and websites for organisations in Uganda and East Africa.",
+    "All 47 projects by Ashaba Jasper: hotel, operations and civic data systems, online stores, mobile apps and websites for organisations in Uganda and East Africa.",
 });
 
 interface WorkPageProps {
@@ -94,8 +94,8 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
         lede={
           <p>
             {work.length} projects: systems that run hotels, firms and public votes, online stores, mobile apps and
-            websites for organisations in Uganda and East Africa. All but one were built at Persmon Technologies;
-            Jasper OS is my own.
+            websites for organisations in Uganda and East Africa. All of them were built at
+            Persmon Technologies.
           </p>
         }
       >

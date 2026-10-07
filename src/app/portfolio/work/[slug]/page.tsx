@@ -44,7 +44,7 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
   const item = caseStudyFor((await params).slug);
   if (!item) notFound();
   const study = item.caseStudy;
-  // Persmon pages say "What we built"; only Jasper OS is solo work.
+  // Persmon pages say "What we built"; solo work would say "What I built".
   const solo = !study.role.startsWith("Built at");
   // The first external link is the live site or demo ("Open the public demo", "Visit ugandabookshop.com").
   const liveLink = item.url ? (study.links.find((link) => link.href === item.url) ?? null) : null;

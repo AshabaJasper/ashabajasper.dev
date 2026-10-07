@@ -147,7 +147,7 @@ export default async function HomePage() {
       {/* Selected work */}
       <section id="work" aria-labelledby="work-title" className="border-rule scroll-mt-20 border-t">
         <div className="container-page py-16 sm:py-24">
-          <SectionHeading id="work-title" kicker="Selected work" title="Six projects, in detail.">
+          <SectionHeading id="work-title" kicker="Selected work" title="Five systems, in detail.">
             <ArrowLink href="/work">All {work.length} projects</ArrowLink>
           </SectionHeading>
           <div className="mt-12 grid gap-x-8 gap-y-16 sm:mt-14 md:grid-cols-2 md:gap-y-20">

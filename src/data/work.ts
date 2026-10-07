@@ -1,7 +1,7 @@
 /**
  * Every project on the portfolio. Sources: the Persmon Technologies project
  * listing (persmontechnologies.com/projects and each project page, read on
- * 7 October 2026) and the Jasper OS repository docs. The owner confirmed that
+ * 7 October 2026). The owner confirmed that
  * every Persmon project is his work. Nothing here is invented: unknown years
  * are null and stacks are only those the listing names.
  *
@@ -56,41 +56,6 @@ const persmonPage = (slug: string): WorkLink => ({
 
 export const work: WorkItem[] = [
   // Featured, in this order.
-  {
-    slug: "jasper-os",
-    name: "Jasper OS",
-    kind: "system",
-    sector: "Personal software",
-    year: 2026,
-    summary:
-      "A private, self-hosted life dashboard for goals, planning, habits, money, work and learning, built as one modular Next.js app.",
-    url: null,
-    stack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Prisma", "PostgreSQL", "Auth.js", "Vitest", "Docker"],
-    screenshotAlt: "Jasper OS module settings, with presets that switch whole parts of the app on or off and a toggle for each module",
-    featured: true,
-    order: 1,
-    caseStudy: {
-      headline: "A private life dashboard, engineered like production software.",
-      context:
-        "Jasper OS is a single-owner dashboard for running a life: direction and goals, the day ahead, habits, money, work and learning. Every part of it is a module that can be switched off without losing data, and it runs self-hosted with Docker Compose behind Coolify. It holds private data, so it has no public address; the engineering is written up on the blog instead.",
-      built: [
-        "One module registry drives the sidebar, command palette, quick add, reports and the on and off switches",
-        "Money kept as integer minor units, with explicit movement types and no ledger entry ever created automatically",
-        "A sign-in PIN accepted only on a trusted device, stored as a bcrypt hash, with wrong tries counted per device",
-        "Pure, tested calculation code kept apart from thin database code, with the current time passed in",
-        "Privacy tiers that keep sensitive free text out of AI context, nudges and the calendar feed",
-        "Opt-in automations and nudges by Telegram and email, with quiet hours, daily caps and a dry-run preview",
-      ],
-      stack: ["Next.js 15", "React 19", "TypeScript", "Tailwind CSS", "Prisma", "PostgreSQL", "Auth.js", "Vitest", "Docker Compose", "Coolify"],
-      role: "Designed and built, solo",
-      links: [
-        { label: "A module registry as the single source of truth", href: "/module-registry-as-single-source-of-truth", site: "blog" },
-        { label: "Money as integer minor units", href: "/money-as-integer-minor-units", site: "blog" },
-        { label: "A PIN on a trusted device", href: "/pin-on-a-trusted-device", site: "blog" },
-        { label: "Self-hosting Next.js on Coolify", href: "/self-hosting-nextjs-on-coolify", site: "blog" },
-      ],
-    },
-  },
   {
     slug: "hms",
     name: "HMS: Hotel Management System",

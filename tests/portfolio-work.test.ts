@@ -4,7 +4,6 @@ import { featuredWork, sectors, work, workBySlug, workKinds } from "@/data/work"
 
 const EM_DASH = String.fromCharCode(0x2014);
 const FEATURED_ORDER = [
-  "jasper-os",
   "hms",
   "oms",
   "uganda-bookshop",
@@ -13,11 +12,11 @@ const FEATURED_ORDER = [
 ];
 
 describe("portfolio work data", () => {
-  it("has all 47 Persmon projects plus Jasper OS", () => {
-    expect(work).toHaveLength(48);
+  it("has all 47 Persmon projects", () => {
+    expect(work).toHaveLength(47);
     const byKind = Object.fromEntries(workKinds.map(({ kind }) => [kind, work.filter((w) => w.kind === kind).length]));
     // Persmon lists 6 systems, 35 websites, 3 online shops and 3 mobile apps; Jasper OS is one more system.
-    expect(byKind).toEqual({ system: 7, website: 35, ecommerce: 3, mobile: 3 });
+    expect(byKind).toEqual({ system: 6, website: 35, ecommerce: 3, mobile: 3 });
   });
 
   it("uses unique kebab-case slugs and unique order values", () => {
@@ -27,8 +26,8 @@ describe("portfolio work data", () => {
     expect(new Set(work.map((w) => w.order)).size).toBe(work.length);
   });
 
-  it("features exactly six projects, in the agreed order, each with a case study", () => {
-    expect(work.filter((w) => w.featured)).toHaveLength(6);
+  it("features exactly five projects, in the agreed order, each with a case study", () => {
+    expect(work.filter((w) => w.featured)).toHaveLength(5);
     const featured = featuredWork();
     expect(featured.map((w) => w.slug)).toEqual(FEATURED_ORDER);
     for (const item of featured) {
@@ -42,8 +41,7 @@ describe("portfolio work data", () => {
       expect(sentences.length, item.slug).toBeGreaterThanOrEqual(2);
       expect(sentences.length, item.slug).toBeLessThanOrEqual(3);
     }
-    expect(workBySlug("jasper-os")?.caseStudy?.role).toBe("Designed and built, solo");
-    for (const item of featured.filter((w) => w.slug !== "jasper-os")) {
+    for (const item of featured) {
       expect(item.caseStudy.role).toBe("Built at Persmon Technologies");
     }
   });
@@ -52,22 +50,13 @@ describe("portfolio work data", () => {
     expect(work.filter((w) => !w.featured && w.caseStudy)).toEqual([]);
   });
 
-  it("uses https URLs or null, and null for mobile and private work", () => {
+  it("uses https URLs or null, and null for mobile and internal work", () => {
     for (const item of work) {
       if (item.url !== null) expect(() => new URL(item.url!)).not.toThrow();
       if (item.url !== null) expect(item.url, item.slug).toMatch(/^https:\/\//);
       if (item.kind === "mobile") expect(item.url, item.slug).toBeNull();
     }
-    expect(workBySlug("jasper-os")?.url).toBeNull();
     expect(workBySlug("persmon-ems")?.url).toBeNull();
-  });
-
-  it("links Jasper OS to blog posts by path, never to an internal prefix", () => {
-    const links = workBySlug("jasper-os")!.caseStudy!.links;
-    for (const link of links) {
-      expect(link.site).toBe("blog");
-      expect(link.href).toMatch(/^\/[a-z0-9-]+$/);
-    }
   });
 
   it("has no em dashes, no unknown-year zeros and no '+N more' stack entries", () => {
@@ -81,7 +70,7 @@ describe("portfolio work data", () => {
   });
 
   it("derives sectors that cover every item", () => {
-    expect(sectors.reduce((sum, s) => sum + s.count, 0)).toBe(48);
+    expect(sectors.reduce((sum, s) => sum + s.count, 0)).toBe(47);
     expect(new Set(sectors.map((s) => s.slug)).size).toBe(sectors.length);
   });
 

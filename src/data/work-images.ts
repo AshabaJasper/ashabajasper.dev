@@ -25,14 +25,6 @@ export const WORK_IMAGES: Partial<Record<string, WorkImage>> = {
     blurDataURL:
       "data:image/webp;base64,UklGRkwAAABXRUJQVlA4IEAAAADQAQCdASoQAAoAA4BaJYgCdAEHHlxEYAD+9CU/uLpFYs+bbdjGMV9TVhhUAF0s/pdNn0t2B1RLQIPvivIMwAAA",
   },
-  "jasper-os": {
-    base: "/images/work/jasper-os",
-    widths: [640, 960, 1280, 1600],
-    width: 1600,
-    height: 1000,
-    blurDataURL:
-      "data:image/webp;base64,UklGRi4AAABXRUJQVlA4ICIAAABwAQCdASoQAAoAA4BaJaWZAAGIAAD+9EZOnd0LvJphAAAA",
-  },
   oms: {
     base: "/images/work/oms",
     widths: [640, 960, 1280, 1600],

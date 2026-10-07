@@ -12,13 +12,11 @@ export const metadata: Metadata = blogMetadata({
   title: "Writing · Ashaba Jasper",
   absoluteTitle: true,
   description:
-    "Essays and build notes by Ashaba Jasper on data, AI and business systems in East Africa, including the Building Jasper OS series.",
+    "Essays and build notes by Ashaba Jasper on data, AI and business systems in East Africa.",
 });
 
 /** What each series is about, shown in its callout. Only series with real posts appear. */
 const SERIES_BLURB: Record<string, string> = {
-  "Building Jasper OS":
-    "Jasper OS is the private life dashboard I build and run for myself. This series walks through the decisions behind it, one part at a time.",
 };
 
 function seriesGroups(posts: PostSummary[]): { name: string; parts: PostSummary[] }[] {
