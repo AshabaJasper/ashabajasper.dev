@@ -1,0 +1,163 @@
+---
+title: "Making double bookings impossible: the database guard inside Persmon HMS"
+description: "How Persmon HMS lets Postgres, not application luck, guarantee that two guests can never hold the same hotel room on the same night."
+date: "2026-10-07"
+tags: [postgres, system-design, hospitality, typescript, multi-tenancy]
+ogTitle: "Making double bookings impossible in HMS"
+---
+
+Picture a Saturday at a busy hotel in Uganda. A regular calls the manager's mobile and asks for the deluxe room with the view for the weekend. At almost the same moment, a couple walks up to the front desk and asks for exactly that room. The manager is typing the phone booking on a tablet in the back office; the receptionist is typing the walk-in at the desk. Both screens say the room is free. Both press save.
+
+In a paper diary, this problem solves itself, because there is only one diary and only one pen can write in a box at a time. Software removes that physical constraint, and a surprising number of hotel systems never put it back. The result is the worst conversation in hospitality: a tired guest at the desk at night, a confirmed booking in their hand, and no room.
+
+When we built HMS at Persmon Technologies, a multi-hotel management system with bookings, rooms, housekeeping, a restaurant and bar POS, UGX pricing and Mobile Money, I decided that this was the one guarantee the system could not compromise on. This post is about how we made a double booking not merely unlikely, but impossible, and what that choice cost us.
+
+## Why the obvious check is not enough
+
+The first version of availability logic that most of us write looks like this: query for bookings on the room that overlap the requested dates, and if there are none, insert the new booking.
+
+That is a read followed by a write, and between the two there is a gap. Two requests can both run the read, both see an empty result, and both insert. The window is small, but a hotel takes bookings every day for years, and small windows get hit. Worse, the failure is silent: nothing errors, and you only find out when the second guest arrives.
+
+There are several ways to close the gap. These are the ones I weighed:
+
+| Approach | What it guarantees | What it costs |
+| --- | --- | --- |
+| Check in application code | Nothing under concurrency | Nothing, which is the problem |
+| Serializable transactions | Correctness, if every path uses them | Retries everywhere, and discipline in every future code path |
+| Advisory locks per room | Correctness, if every path takes the lock | The same discipline problem, plus lock naming conventions |
+| A database exclusion constraint | Correctness from every path, including raw SQL and imports | Lives outside the ORM model; needs careful migrations |
+
+The first three all share a weakness: they depend on every piece of code, written by every future developer, remembering to do the right thing. A bulk import script, a quick fix in a SQL console, or a new endpoint written in a hurry could all skip the lock. I wanted the rule to live somewhere that no code path could skip.
+
+## Letting Postgres say no
+
+Postgres has a feature that fits this problem exactly: the exclusion constraint. A unique constraint says "no two rows may have equal values here". An exclusion constraint generalises that to "no two rows may satisfy this combination of operators". With the `btree_gist` extension, you can mix ordinary equality on columns with range overlap on dates.
+
+This is the heart of the guard, written as a hand-crafted migration:
+
+```sql title="packages/db/prisma/migrations/.../migration.sql"
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+ALTER TABLE bookings ADD CONSTRAINT bookings_no_overlap
+  EXCLUDE USING gist (
+    hotel_id WITH =,
+    room_id  WITH =,
+    daterange(check_in, check_out, '[)') WITH &&
+  )
+  WHERE (room_id IS NOT NULL AND status IN ('new', 'confirmed', 'checkedin'));
+```
+
+Read it as a sentence: no two bookings in the same hotel, on the same room, may have overlapping date ranges, as long as both are actively holding the room. If two transactions race, Postgres serialises the conflict internally and the second insert fails with error code `23P01`. There is no window, because the check and the write are the same operation inside the database.
+
+Three details in that statement are deliberate, and each one came from thinking about how a real hotel runs.
+
+### The half-open range
+
+The range is built with `'[)'`, which means it includes the check-in date and excludes the check-out date. A guest who checks out on Tuesday and a guest who checks in on Tuesday do not overlap. Same-day turnover is the normal rhythm of a hotel, and a closed range would have refused it. We store `check_in` and `check_out` as plain dates rather than timestamps, so there is no confusion about which hour of the day a night belongs to.
+
+### The partial predicate
+
+The `WHERE` clause limits the constraint to bookings that actually hold a room: new, confirmed and checked in. A cancelled booking, a no-show or a completed stay releases the room automatically, without any code having to remember to free it. A booking without a room yet, which is common for a request that the desk will assign later, blocks nothing.
+
+### Scoped by hotel
+
+HMS is multi-tenant: several hotels share one database. Room identifiers are already globally unique, so strictly the `hotel_id` term is not needed for correctness. I kept it because every other rule in the system is scoped by hotel, and a constraint that reads the same way as the tenancy model is easier to reason about.
+
+## The friendly check still exists
+
+A database error is a poor user interface. "Exclusion constraint violated" tells a receptionist nothing about what to do next. So the service layer still runs its own availability check first, and the constraint sits underneath as the guarantee.
+
+Over time, that service layer had grown four slightly different answers to "can this stay have this room?" Creating a booking, editing one, checking in and moving an in-house guest each ran their own subset of checks. We consolidated them into a single function that every path calls. A shortened version:
+
+```ts title="apps/api/src/domain/room-hold.ts"
+export async function assertRoomHold(tx: Tx, hotelId: string, input: RoomHoldInput) {
+  // Lock the room row so two desks cannot both pass these checks.
+  await tx.$queryRaw`SELECT id FROM rooms WHERE id = ${input.roomId}::uuid FOR UPDATE`;
+  const room = await loadRoom(tx, hotelId, input.roomId);
+
+  if (room.outOfService) throw new ConflictException(`Room ${room.number} is out of service`);
+
+  const holding = await tx.booking.findMany({
+    where: {
+      hotelId, roomId: room.id,
+      status: { in: ["new", "confirmed", "checkedin"] },
+      checkIn: { lt: input.checkOut }, checkOut: { gt: input.checkIn },
+    },
+  });
+  const clash = roomHoldClash(input, holding, input.bookingId);
+  if (clash) throw new ConflictException(`Room ${room.number} is already booked for those dates (${clash.code})`);
+
+  if (input.forCheckIn) {
+    // Moving in now also needs the room clean, free of blocking
+    // maintenance and empty of the previous guest.
+    await assertReadyForArrival(tx, hotelId, room, input.bookingId);
+  }
+  return room;
+}
+```
+
+Two things are worth pointing out. First, the status list in the query mirrors the predicate on the constraint exactly. If they ever drift, the friendly check and the real guarantee disagree, so the controller keeps the list in one named constant with a comment saying it must match. Second, the overlap test itself is a small pure function, `checkIn < otherCheckOut && checkOut > otherCheckIn`, which is the half-open rule written in TypeScript.
+
+The row lock on the room makes the friendly check reliable in practice, and the messages name the room and the booking that holds the dates, so the desk knows who to call. But if anything ever slips past this function, the constraint still catches it. The API recognises the exclusion error and turns it into an HTTP 409 with a plain message, rather than a 500.
+
+```ts title="apps/api/src/bookings/bookings.controller.ts"
+/** The exclusion constraint surfaces through Prisma in a few shapes. */
+function isOverlapError(e: unknown): boolean {
+  const s = `${(e as { message?: string })?.message ?? ""} ${JSON.stringify((e as { meta?: unknown })?.meta ?? "")}`;
+  return s.includes("bookings_no_overlap") || s.includes("23P01") || s.includes("exclusion constraint");
+}
+```
+
+It is not elegant string matching. It is, however, honest about how the error arrives today.
+
+## A reservation is not a room key
+
+The half-open range creates a subtlety that took us a while to model properly. On Tuesday, the outgoing guest's booking and the incoming guest's booking are both legal reservations for the same room. But the room is physically occupied until the first guest actually checks out, and it is not sellable until housekeeping has cleaned it.
+
+So the hold has two modes. A reservation for the future only needs the dates to be free. A check-in, or moving an in-house guest to another room, also requires that no one is currently checked in to that room, that no maintenance order is blocking it, and that there is no open housekeeping task. The error messages say which of those is in the way and name the task or the occupant. Re-rooming an in-house guest also raises a cleaning task on the room they leave, so the vacated room does not sit on the board looking clean when it is not.
+
+<Note title="Try it yourself">
+The public demo at https://hms.persmon.cloud gives every visitor a private sandbox copy of a demo hotel. Try booking the same room twice for overlapping nights, then try a back-to-back stay where one guest leaves the day the next arrives. The first is refused with the booking that holds the dates; the second is accepted.
+</Note>
+
+## Tenancy is enforced in the same place
+
+The same philosophy, putting the guarantee in the database, also shapes how HMS keeps hotels apart. Every table that carries a `hotel_id` has Postgres row-level security enabled and forced, with a policy that compares the row's hotel to a setting on the current transaction. The application's database role cannot bypass it.
+
+```ts title="packages/db/src/client.ts"
+export async function withHotelTx<T>(hotelId: string, fn: (tx: Tx) => Promise<T>) {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.hotel_id', ${hotelId}, true)`;
+    return fn(tx);
+  });
+}
+```
+
+The final `true` makes the setting local to the transaction, so it cannot leak to the next request that borrows the same pooled connection. A query run without the setting does not return everything; it fails. The tests assert both behaviours: one tenant cannot see another's bookings, and an unscoped query is refused outright.
+
+That matters for the booking guard too. The availability query, the row lock and the insert all run inside one tenant transaction, so the friendly check can only ever see the current hotel's rooms.
+
+## What it cost
+
+None of this was free, and I would rather be clear about the trade-offs.
+
+- **The constraint lives outside the ORM's model.** Prisma cannot express exclusion constraints, so the guard and the security policies live in a hand-written migration. That migration must never be squashed or edited after deploy, and a fresh database has to replay it. We wrote that rule down in an architecture decision record so nobody tidies it away.
+- **Undo can fail.** Moving a booking back into an active status, for example reversing a cancellation, can now be refused if the room was sold in the meantime. Every handler that changes status has to expect a 409 and explain it.
+- **Two lists must agree.** The service's list of active statuses and the constraint's predicate are the same idea written twice, in two languages. A named constant and a comment keep them aligned, but it is still a seam.
+- **Offline creates wait.** HMS has an offline outbox for the front desk, where connectivity can drop. Check-ins, check-outs and housekeeping updates can queue, because replaying them twice yields a harmless 409. Creating a booking cannot, because each create mints a new booking code. Until we add idempotency keys, new bookings need a connection.
+
+<Note title="Testing the guarantee, not the happy path">
+The database tests insert two overlapping confirmed bookings on the same room and expect error 23P01, then insert two back-to-back bookings and expect both to succeed. Testing the refusal is what proves the guard exists on a freshly migrated database.
+</Note>
+
+## Lessons
+
+**Put the invariant where nothing can route around it.** The question I now ask of any rule that must never be broken is: which layer would still enforce it if someone wrote a script against the database tomorrow? For double bookings and tenant isolation, the answer had to be Postgres.
+
+**Keep a friendly layer on top.** The constraint is the guarantee, but people deserve a message that names the room and the booking in the way. Both layers exist, and they do different jobs.
+
+**Model the business, not just the data.** The half-open range, the partial predicate and the difference between a reservation and an occupied room all came from how a front desk actually works, not from the schema.
+
+**Write the trade-offs down.** Every one of these decisions has a short record explaining why, what it costs and what must not be undone. When the next developer wonders why a migration is hand-written, the answer is one file away.
+
+HMS now runs at Ishasha Junction Hotel and in our public demo. Whatever else changes in the product, this is one property I never want to have to think about at the desk on a Saturday night: one room, one guest, one night at a time.

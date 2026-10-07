@@ -1,0 +1,159 @@
+---
+title: "Six lessons from building websites for Ugandan businesses and NGOs"
+description: "What hotels, shops, movers, salons and charities in Uganda taught us about WhatsApp ordering, booking requests, UGX prices, images, forms and handover."
+date: "2026-10-07"
+tags: [web-development, uganda, whatsapp, performance, small-business]
+ogTitle: "Lessons from building websites for Ugandan businesses"
+---
+
+The projects page at Persmon Technologies currently lists 47 pieces of work. Most of them are websites and web apps for Ugandan organisations: hotels and guesthouses, an online bookshop, law and accounting firms, a school and a hostel, movers and transport companies, charities, a salon, a florist, an eyewear boutique and a juice caterer. The bulk is the everyday work of helping a business get found, trusted and contacted.
+
+After that many builds, the same handful of decisions keeps coming back. None of them are about frameworks. They are about how people here actually buy, book and ask questions, and about what happens to a site after we hand it over. These are the six lessons I would give anyone starting this kind of work, each one taken from code we shipped.
+
+## 1. WhatsApp is the checkout, not a contact link
+
+The first version of most small business sites has a WhatsApp icon in the footer. That is fine, but it wastes the channel. Customers here already talk to businesses on WhatsApp, and owners already answer there, often from the same phone they use for everything else. So for shops we stopped treating WhatsApp as "contact us" and started treating it as the end of the buying flow.
+
+On Berry Store, a Kampala eyewear boutique, the cart never talks to a payment gateway. When the customer taps checkout, the site composes a WhatsApp message listing each frame, the quantity, the line price in UGX, the total, and an optional name and note, then opens WhatsApp with that text ready to send. Each product page has its own button that opens a chat already asking whether that specific frame is available. The Aknog Travel Services booking page does the same with a detailed form: the visitor fills in the trip, the site validates it, and the finished enquiry opens in WhatsApp.
+
+The core is small:
+
+```js title="whatsapp-order.js"
+function isConfigured(number) {
+  // Never ship a link to a placeholder number.
+  return /^\d{9,15}$/.test(number) && number !== "256700000000";
+}
+
+function orderMessage(shopName, cart, name, notes) {
+  const lines = [`Hello ${shopName}, I'd like to order:`, ""];
+  for (const item of cart) {
+    lines.push(`${item.qty} x ${item.name}: ${formatUGX(item.price * item.qty)}`);
+  }
+  lines.push("", `Total: ${formatUGX(cartTotal(cart))}`);
+  if (name.trim()) lines.push("", `Name: ${name.trim()}`);
+  if (notes.trim()) lines.push("", `Notes: ${notes.trim()}`);
+  return lines.join("\n");
+}
+
+function whatsAppUrl(number, message) {
+  if (!isConfigured(number)) return null;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+}
+```
+
+Two details matter more than they look. First, `encodeURIComponent` on the whole message, because product names contain ampersands, apostrophes and line breaks. Second, the guard. On the Veganic Juice and Tea site the helper refuses to build a link while the number is still the template placeholder, and the button stays hidden instead. A WhatsApp link that opens a chat with a stranger is worse than no link at all.
+
+The trade is honest: there is no stock reservation, and the order is not confirmed until a person replies. For a boutique or a caterer that is exactly right. The founder of Veganic put the goal in five words: "Bright, simple and easy to share on WhatsApp."
+
+## 2. Ask for a booking request, not a payment
+
+Hotels are where clients most often ask for "online booking", and where I now ask the most questions back. Usually what they need is a reliable way for a guest to say "these dates, this room, this many people", and a reliable way for staff to answer.
+
+Bakerm Hotel is a good example. Its stay request, table reservation, event enquiry and careers forms all write to a database and email the hotel. The guest gets a receipt with a reference number, and staff confirm by phone, email or WhatsApp. When a stay is agreed, staff can send a confirmation receipt from the admin that states the rate, the total and that payment happens at the hotel. No card form, no booking engine, and nothing to reconcile when a guest changes plans, which they often do.
+
+Ishasha Junction Hotel needed more, so it got more: live room availability with overlap checks, so a guest cannot request a room that is already held, plus automatic confirmation, change and cancellation emails. It is still a request that staff act on.
+
+None of this is a rule against payments. The Uganda Bookshop store has a real checkout, because a bookshop with a large catalogue is a shop first. The decision looks like this:
+
+| Situation | What we build |
+| --- | --- |
+| Stock or rooms that staff need to check by hand | Request form with a reference number and an email receipt |
+| Small catalogue, owner answers chats all day | Cart that composes a WhatsApp order |
+| Quotes that depend on distance, size or site visits | Detailed quote form, sometimes ending in WhatsApp |
+| Large catalogue, fixed prices, steady volume | Real checkout with customer accounts |
+
+The movers and logistics sites on the list, Lyka Movers and Blue Pearls among them, sit in the third row. Nobody can price a house move from a dropdown.
+
+## 3. Show prices in UGX, and show them like a person would
+
+Shillings are large whole numbers, and they read badly without separators. Every shop we build formats prices in one place:
+
+```js title="money.js"
+function formatUGX(amount) {
+  return "UGX " + Math.round(amount).toLocaleString("en-UG");
+}
+
+// Prices derived from another currency should not end in odd digits.
+function roundToHundred(amount) {
+  return Math.round(amount / 100) * 100;
+}
+```
+
+The rounding is there because one catering menu was set from a base price in another currency at a configured rate. Converted figures come out with untidy tails, and "UGX 18,700" looks like a real price while "UGX 18,743" looks like a mistake. Rounding to the nearest hundred keeps the menu believable. Where we can, though, we store prices in UGX to begin with and avoid conversion entirely.
+
+The other half of this lesson is to show prices at all. Several of the sites on the list, such as an electronics shop, a used phone seller and a caterer, publish a price list. Customers who see a price before they message arrive with a real question instead of "how much?".
+
+## 4. Images are the page weight, so treat them as an engineering problem
+
+Most visitors to these sites are on phones, usually on mobile data. The HTML, CSS and JavaScript on a typical brochure site are small. The photos are not, and they arrive straight from a phone camera or a photographer's export.
+
+We handle this in two places. At build time, a script on the Veganic site converts product and hero images to WebP with a maximum width per use: 800 pixels for product cards, 1280 for hero and section images, at quality 82.
+
+```js title="scripts/optimize-images.mjs"
+import sharp from "sharp";
+
+async function toWebp(input, maxWidth) {
+  const output = input.replace(/\.(png|jpe?g)$/i, ".webp");
+  await sharp(input)
+    .rotate() // respect the phone's orientation flag
+    .resize({ width: maxWidth, withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toFile(output);
+  return output;
+}
+```
+
+At upload time matters even more, because after handover the owner uploads the photos. Bakerm Hotel's media library resizes every uploaded image to at most 1920 pixels wide, makes a 480 pixel thumbnail, corrects the orientation, and stores alt text alongside the file. The owner never has to know any of this happened.
+
+In the markup, images below the fold get `loading="lazy"` and explicit `width` and `height`, so the layout does not jump while they load. The main image at the top of the page is the exception: lazy loading it only delays the one picture every visitor sees.
+
+<Note title="Check on a real phone">
+Desktop developer tools are a good start, but a mid-range Android phone on mobile data shows problems that a laptop on office Wi-Fi hides. It is worth opening every site on one before handover.
+</Note>
+
+## 5. A form is only as good as the email it sends
+
+A contact form that silently fails is worse than a phone number, because the visitor believes they have been heard. Over time our form handling settled on a few habits.
+
+**Make the request traceable.** Every Bakerm submission gets a reference such as a stay request number, shown on the thank-you page and repeated in the guest's email receipt. When a guest phones to follow up, staff can find the request in seconds.
+
+**Stop bots without punishing people.** We use a hidden honeypot field rather than a puzzle. When it is filled, the server pretends the submission succeeded, so the bot moves on instead of retrying. A per-address rate limit (Bakerm allows twelve submissions in ten minutes) covers the rest.
+
+```php title="api/submit.php"
+// Real visitors never see this field.
+if (trim($_POST['website'] ?? '') !== '') {
+    respond_json(['ok' => true]); // look successful, store nothing
+}
+if (!rate_limit('submit:' . client_ip(), 12, 600)) {
+    respond_json(['ok' => false, 'error' => 'Too many requests. Please try again shortly.'], 429);
+}
+```
+
+**Send email properly.** The server's built-in mail function is the easiest way to end up in spam. For Bakerm we use a transactional email provider on its free tier, and the hotel's own domain is authenticated with DKIM and DMARC records. The admin has a "send test email" button, so staff can check delivery themselves later. Email arrives as HTML with a plain text copy.
+
+**Never show success for a failure.** The thank-you page appears only after the server confirms the request was stored. If the database is unavailable, the form returns a friendly error rather than a false confirmation.
+
+## 6. Hand over something the owner can actually change
+
+The most common way a small business site decays is not a bug. It is a phone number that changed, or opening hours that are now wrong, on a site nobody at the business knows how to edit.
+
+The smallest fix is to keep business facts in one file. On Berry Store, the name, phone, WhatsApp link, Instagram handle, hours and map links live in a single JSON file, and every page fills its contact details from it through `data-site` attributes. Changing the number is one edit, not a search through a dozen HTML files.
+
+```html title="footer.html"
+<a data-site="whatsapp" href="#">Chat on WhatsApp</a>
+<span data-site="hours"></span>
+```
+
+For larger sites the answer is a proper admin, sized to the staff. Bakerm Hotel has three roles: an administrator, a content editor for pages, media, offers and SEO, and a front desk role for guest messages and reports. The first sign-in forces a password change, sign-in is throttled after repeated failures, and every save is logged. Per-page titles, descriptions and share images are editable too, so the owner is not dependent on us for basic search visibility.
+
+Hosting choices follow the same thinking. Many of our sites are plain HTML, CSS and JavaScript with no build step, which runs on ordinary shared hosting and is easy for the next developer to understand. We add PHP and MySQL only where something must be stored, and Bakerm's public pages still render from fallback data if the database is unreachable.
+
+<Note title="Write the handover down">
+Our project folders carry a README with the pages, how to run it locally and what is deliberately out of scope. Bakerm's lists payments, a live booking engine and guest accounts as later work, so nobody mistakes a missing feature for a bug.
+</Note>
+
+## What ties these together
+
+Looking back across the list, the sites that work best are not the most technically ambitious. They fit how the business already operates: the owner answers WhatsApp, staff confirm bookings by phone, prices are in shillings, and the person updating the site next year is not a developer. Our job is to make that way of working faster and more reliable, not to replace it with a flow borrowed from somewhere else.
+
+If you are building for businesses like these, start by asking how a customer reaches them today and what happens next. The site is usually the shortest path to that conversation.
