@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { ArrowUpRight, Download, Mail } from "lucide-react";
 import { CvGantt, type GanttRow } from "@/components/portfolio/cv-gantt";
 import { CvNav, PrintButton } from "@/components/portfolio/cv-controls";
@@ -104,6 +105,9 @@ export default function CvPage() {
           </p>
         }
       >
+        <div className="ring-primary/60 ring-offset-background relative mt-7 size-24 overflow-hidden rounded-2xl ring-2 ring-offset-2 sm:absolute sm:top-24 sm:right-8 sm:mt-0 sm:size-36 lg:right-[max(2rem,calc((100vw-1120px)/2+2rem))] lg:size-44 print:hidden">
+          <Image src={profile.avatar.src} alt={profile.avatar.alt} fill priority sizes="(min-width: 1024px) 176px, 144px" className="object-cover" />
+        </div>
         <ul className="text-ink-soft mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[0.95rem]">
           <li>
             <a href={`mailto:${profile.email}`} className="link">

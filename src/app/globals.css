@@ -39,7 +39,7 @@
   --code-bg: #efefeb;
 
   /* Background texture and glow, used sparingly in heroes. */
-  --grid-dot: rgb(13 14 16 / 0.09);
+  --grid-dot: rgb(13 14 16 / 0.13);
   --glow: rgb(4 120 87 / 0.1);
 
   /* Work map categorical slots (validated all-pairs, see DESIGN.md). Websites are neutral. */
@@ -76,7 +76,7 @@
   --highlight: #11392a;
   --code-bg: #101215;
 
-  --grid-dot: rgb(236 236 238 / 0.075);
+  --grid-dot: rgb(236 236 238 / 0.12);
   --glow: rgb(61 220 151 / 0.09);
 
   --viz-system: #199e70;
@@ -279,6 +279,12 @@
     mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
   }
 
+  /* The same texture across the whole viewport, behind every page. */
+  .dot-grid-full {
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
   /* Staggered entrance; each element sets --reveal-delay. No motion when reduced. */
   .reveal {
     animation: var(--animate-reveal);
@@ -479,7 +485,8 @@ html[data-term-intro="play"] .term-screen:not([data-live]) {
   [aria-label="Get in touch"],
   .skip-link,
   canvas,
-  .dot-grid {
+  .dot-grid,
+  .dot-grid-full {
     display: none !important;
   }
   *,

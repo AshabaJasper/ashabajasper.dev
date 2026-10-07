@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
@@ -72,13 +73,21 @@ export default async function HomePage() {
         <Backdrop className="-z-10" />
         <div className="container-page grid grid-cols-[minmax(0,1fr)] items-center gap-x-12 gap-y-14 pt-10 pb-20 sm:pt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:pt-24 lg:pb-32">
           <div>
-            <p className="kicker reveal flex items-center gap-2.5">
+            <div className="reveal flex items-center gap-4">
+              <div className="ring-primary/60 ring-offset-background relative size-16 shrink-0 overflow-hidden rounded-2xl ring-2 ring-offset-2 transition-transform duration-300 hover:-rotate-3 hover:scale-105 sm:size-20">
+                <Image src={profile.avatar.src} alt={profile.avatar.alt} fill priority sizes="80px" className="object-cover" />
+              </div>
+              <div>
+                <p className="text-foreground text-[0.95rem] font-medium">{profile.fullName}</p>
+            <p className="kicker mt-1 flex items-center gap-2.5">
               <span aria-hidden className="relative flex size-2">
                 <span className="bg-primary absolute inset-0 animate-ping rounded-full opacity-60 motion-reduce:hidden" />
                 <span className="bg-primary relative size-2 rounded-full" />
               </span>
               {profile.location}
             </p>
+              </div>
+            </div>
             <h1 id="hero-title" className="font-display mt-6 text-[clamp(3.6rem,12.5vw,8.6rem)] leading-[0.86] tracking-[-0.055em]">
               <span className="rise-line" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
                 <span>Ashaba</span>
