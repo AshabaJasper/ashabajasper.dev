@@ -9,6 +9,7 @@ function sitemapPaths(): string[] {
     "/",
     "/work",
     ...featuredWork().map((item) => `/work/${item.slug}`),
+    "/cv",
     "/about",
     "/now",
     "/contact",

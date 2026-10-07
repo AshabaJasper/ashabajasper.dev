@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { profile } from "@/data/profile";
+import { ShortcutsButton } from "@/components/shared/shortcuts-button";
 import { crossHref } from "@/lib/links";
 import type { Site } from "@/lib/sites";
 
@@ -8,6 +10,8 @@ interface FooterLink {
   href: string;
   external?: boolean;
 }
+
+const SOURCE_URL = "https://github.com/AshabaJasper/ashabajasper.dev";
 
 /**
  * Shared footer for the portfolio and blog. The closing line doubles as the
@@ -20,6 +24,7 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
       links: [
         { label: "Home", href: crossHref(site, "portfolio", "/") },
         { label: "Work", href: crossHref(site, "portfolio", "/work") },
+        { label: "CV", href: crossHref(site, "portfolio", "/cv") },
         { label: "About", href: crossHref(site, "portfolio", "/about") },
         { label: "Now", href: crossHref(site, "portfolio", "/now") },
         { label: "Contact", href: crossHref(site, "portfolio", "/contact") },
@@ -47,19 +52,22 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="border-rule mt-24 border-t">
-      <div className="container-page py-14 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.4fr_1fr]">
+    <footer className="border-rule relative mt-28 overflow-hidden border-t">
+      <div className="container-page py-16 sm:py-24">
+        <div className="grid gap-14 lg:grid-cols-[1.35fr_1fr]">
           <div>
-            <p className="kicker">Say hello</p>
-            <p className="mt-4 max-w-[18ch] font-serif text-[2.4rem] leading-[1.05] tracking-[-0.015em] sm:text-[3.2rem]">
+            <p className="kicker kicker-prompt">say hello</p>
+            <p className="font-display mt-5 max-w-[14ch] text-[clamp(2.5rem,6.5vw,4.75rem)] leading-[0.95]">
               Have a system worth building?
             </p>
             <a
               href={`mailto:${profile.email}`}
-              className="text-link hover:text-link-hover mt-6 inline-flex min-h-11 items-center text-lg underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current"
+              className="group text-foreground mt-8 inline-flex min-h-11 items-center gap-2 font-mono text-[clamp(1rem,2.4vw,1.25rem)] break-all"
             >
-              {profile.email}
+              <span className="decoration-primary underline decoration-2 underline-offset-[6px] transition-colors group-hover:text-primary">
+                {profile.email}
+              </span>
+              <ArrowUpRight aria-hidden className="text-primary size-5 shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" strokeWidth={1.75} />
             </a>
             <p className="text-muted-foreground mt-2 text-sm">{profile.location}</p>
           </div>
@@ -68,7 +76,7 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
             {groups.map((group) => (
               <div key={group.title}>
                 <h2 className="kicker">{group.title}</h2>
-                <ul className="mt-4 space-y-1">
+                <ul className="mt-4 space-y-0.5">
                   {group.links.map((link) => (
                     <li key={link.label}>
                       {link.external ? (
@@ -76,7 +84,7 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
                           href={link.href}
                           rel="me noopener"
                           target="_blank"
-                          className="text-ink-soft hover:text-foreground inline-flex min-h-9 items-center text-[0.95rem] transition-colors"
+                          className="text-ink-soft hover:text-foreground inline-flex min-h-9 items-center text-[0.93rem] transition-colors"
                         >
                           {link.label}
                           <span className="sr-only"> (opens in a new tab)</span>
@@ -84,7 +92,7 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
                       ) : (
                         <Link
                           href={link.href}
-                          className="text-ink-soft hover:text-foreground inline-flex min-h-9 items-center text-[0.95rem] transition-colors"
+                          className="text-ink-soft hover:text-foreground inline-flex min-h-9 items-center text-[0.93rem] transition-colors"
                         >
                           {link.label}
                         </Link>
@@ -97,11 +105,19 @@ export function SiteFooter({ site }: { site: Exclude<Site, "admin"> }) {
           </div>
         </div>
 
-        <div className="border-rule text-muted-foreground mt-14 flex flex-col gap-3 border-t pt-6 text-sm sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            &copy; {year} {profile.fullName}. Built with Next.js, self-hosted on a Hostinger VPS.
+        <div className="border-rule text-muted-foreground mt-16 flex flex-col gap-4 border-t pt-6 text-sm lg:flex-row lg:items-center lg:justify-between">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>
+              &copy; {year} {profile.fullName}. Designed and built by {profile.name}.
+            </span>
+            <a href={SOURCE_URL} target="_blank" rel="noopener" className="hover:text-foreground inline-flex min-h-9 items-center gap-1 font-mono text-[0.78rem]">
+              View source
+              <ArrowUpRight aria-hidden className="size-3.5" strokeWidth={1.75} />
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
           </p>
-          <p className="flex gap-5">
+          <p className="flex flex-wrap items-center gap-x-5">
+            <ShortcutsButton />
             <Link href={crossHref(site, "portfolio", "/privacy")} className="hover:text-foreground inline-flex min-h-9 items-center">
               Privacy
             </Link>

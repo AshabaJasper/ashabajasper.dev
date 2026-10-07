@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { ArrowLink, PageHeader, StackLine } from "@/components/portfolio/ui";
+import { WorkMapSection } from "@/components/portfolio/work-map-section";
 import { allWork, sectorSlug, sectors, sectorYear, work, workKinds, type WorkItem } from "@/data/work";
 import { pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
@@ -20,13 +21,16 @@ interface WorkPageProps {
 
 function WorkRow({ item }: { item: WorkItem }) {
   return (
-    <li className="border-rule grid grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-2 border-b py-6 md:grid-cols-[minmax(0,1fr)_14rem]">
+    <li
+      id={item.slug}
+      className="border-rule target:bg-accent/60 group/row grid scroll-mt-24 grid-cols-[minmax(0,1fr)] gap-x-8 gap-y-2 border-b py-6 transition-colors md:grid-cols-[minmax(0,1fr)_14rem] md:px-3 target:rounded-[var(--radius-md)] target:px-3"
+    >
       <div className="min-w-0">
-        <h3 className="font-serif text-[1.4rem] leading-tight tracking-[-0.01em]">
+        <h3 className="text-[1.2rem] leading-tight font-semibold tracking-[-0.02em] sm:text-[1.3rem]">
           {item.featured ? (
             <Link href={`/work/${item.slug}`} className="decoration-primary underline-offset-[5px] hover:underline">
               {item.name}
-              <span className="text-primary ml-2 align-middle font-sans text-[0.72rem] font-medium tracking-[0.12em] uppercase">
+              <span className="border-primary/50 text-primary ml-2.5 rounded-full border px-2 py-0.5 align-middle font-mono text-[0.66rem] font-medium tracking-[0.08em] uppercase">
                 Case study
               </span>
             </Link>
@@ -90,7 +94,7 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
     <>
       <PageHeader
         kicker="Work"
-        title="Every project, in one list."
+        title="Every project, in one place."
         lede={
           <p>
             {work.length} projects: systems that run hotels, firms and public votes, online stores, mobile apps and
@@ -105,7 +109,15 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
         </div>
       </PageHeader>
 
+      <section aria-labelledby="map-title" className="container-page pb-20 sm:pb-28">
+        <h2 id="map-title" className="kicker kicker-prompt mb-6">
+          work map
+        </h2>
+        <WorkMapSection />
+      </section>
+
       <div className="container-page">
+        <h2 className="font-display mb-8 text-[clamp(2rem,4.6vw,3.4rem)] leading-none">The full list</h2>
         <nav aria-label="Filter by sector" className="border-rule border-y py-5">
           <p className="kicker mb-3" id="sector-filter-label">
             Sector
@@ -152,7 +164,7 @@ export default async function WorkPage({ searchParams }: WorkPageProps) {
           return (
             <section key={kind} aria-labelledby={`kind-${kind}`} className="mt-14 sm:mt-20">
               <div className="flex items-baseline justify-between gap-4">
-                <h2 id={`kind-${kind}`} className="font-serif text-[2rem] leading-none tracking-[-0.015em] sm:text-[2.5rem]">
+                <h2 id={`kind-${kind}`} className="font-display text-[1.7rem] leading-none sm:text-[2.1rem]">
                   {label}
                 </h2>
                 <p className="text-muted-foreground font-mono text-[0.78rem] tabular-nums">

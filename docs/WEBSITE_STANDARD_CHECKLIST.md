@@ -42,6 +42,30 @@ change touches an item.
 | 19 | Real contact address | MISSING/BLOCKED: awaiting verification | Owner decision on 7 October 2026: publish the city-level location "Kampala, Uganda" and the email `ashabajasper@gmail.com` (`src/data/profile.ts`). No street address is published, by owner decision. To verify they appear on the contact page, in the footer and on the privacy page, and that the `mailto:` link works. |
 | 20 | Compressed images | MISSING/BLOCKED: awaiting verification | `scripts/optimize-images.mjs` (`npm run images`) writes resized WebP/AVIF to `public/images`; `next/image` serves AVIF and WebP (`next.config.ts`) with width and height set; the hero portrait is prioritised, images below the fold lazy-load. To verify sizes and layout shift with Lighthouse on production. |
 
+## Redesign review, 7 October 2026 (local, not production)
+
+The interactive redesign (terminal, command palette, work map, `/cv`) was checked on a
+local dev server (`localhost:3201`, `blog.localhost:3201`) with Playwright. Statuses
+above stay as they were until production is verified; this records what was observed
+locally and what changed.
+
+- **1, 2, 3:** every portfolio and blog route rendered with its own title; `/cv` exports
+  its own title and description; unknown paths return 404 with the branded page
+  (`/no-such-page`, observed status 404 at all five widths).
+- **4:** `#hero-actions` (the primary action) is inside the first viewport on home,
+  work, case studies, `/cv` and `/about` at 320, 375, 768, 1024 and 1440 px, light and
+  dark.
+- **7:** `/cv` added to the portfolio sitemap (`tests/portfolio-sitemap.test.ts`).
+- **10:** no horizontal overflow on 13 routes at 320, 375, 768, 1024 and 1440 px in
+  both themes (scroll width equals viewport width).
+- **11:** the sticky bar now also covers `/cv`; it still waits for `#hero-actions` to
+  leave the viewport and hides on focus, near the footer and on the contact form.
+- **17:** still not applicable. The redesign adds only `sessionStorage` (terminal intro
+  seen this session, sticky bar dismissed) and the existing `localStorage` theme. No
+  cookies on the public hosts.
+- **20:** `public/cv/ashaba-jasper-cv.pdf` is printed from `/cv` by
+  `scripts/generate-cv-pdf.mjs`; the owner's original CV file is not published.
+
 ## Launch blockers and owner inputs
 
 Facts and actions only the owner can supply. Pages leave these out until they exist; none
@@ -63,5 +87,8 @@ is filled with a guess.
    repositories may have their own licences; publishing a new grant needs an owner decision.
 9. **GitHub repository**: the owner approved the public repository
    `AshabaJasper/ashabajasper.dev`, with `main` as the deploy branch. Publication is pending.
-10. **The `os` DNS record**: approved and already configured for the private Jasper OS
+10. **Persmon COO start date.** The CV does not list the current role, so `/cv` and the
+    experience data show Co-founder and COO as "Present" with no start date. LinkedIn's
+    December 2022 is organisation tenure, not the appointment date.
+11. **The `os` DNS record**: approved and already configured for the private Jasper OS
     migration; it is not a domain of this application.

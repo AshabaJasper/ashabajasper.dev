@@ -36,6 +36,7 @@ describe("portfolio sitemap.xml", () => {
       "/",
       "/work",
       ...featuredWork().map((w) => `/work/${w.slug}`),
+      "/cv",
       "/about",
       "/now",
       "/contact",

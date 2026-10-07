@@ -44,10 +44,10 @@ export default async function BlogIndexPage() {
       <header className="max-w-[46rem]">
         <p className="kicker reveal">Writing</p>
         <h1
-          className="reveal mt-4 font-serif text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4.4rem]"
+          className="reveal mt-4 font-display text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4.4rem]"
           style={{ ["--reveal-delay" as string]: "60ms" }}
         >
-          Notes from building <em className="italic">real</em> systems.
+          Notes from building <span className="text-primary">real</span> systems.
         </h1>
         <p
           className="reveal text-ink-soft mt-6 max-w-[58ch] text-[1.12rem] leading-relaxed sm:text-[1.2rem]"
@@ -71,7 +71,7 @@ export default async function BlogIndexPage() {
         <section key={group.name} aria-labelledby={seriesId(group.name)} className="series-callout mt-16 sm:mt-20">
           <div>
             <p className="kicker">A series in {group.parts.length} parts</p>
-            <h2 id={seriesId(group.name)} className="mt-3 font-serif text-[2rem] leading-tight tracking-[-0.01em] sm:text-[2.4rem]">
+            <h2 id={seriesId(group.name)} className="mt-3 font-display text-[2rem] leading-tight tracking-[-0.01em] sm:text-[2.4rem]">
               {group.name}
             </h2>
             {SERIES_BLURB[group.name] ? (
@@ -85,7 +85,7 @@ export default async function BlogIndexPage() {
                   <span className="text-muted-foreground font-mono text-[0.78rem] tabular-nums">
                     {String(part.series?.part ?? "").padStart(2, "0")}
                   </span>
-                  <span className="font-serif text-[1.3rem] leading-snug group-hover:underline group-hover:decoration-link/60 group-hover:underline-offset-4">
+                  <span className="font-display text-[1.3rem] leading-snug group-hover:underline group-hover:decoration-link/60 group-hover:underline-offset-4">
                     {part.title}
                   </span>
                 </Link>

@@ -72,9 +72,9 @@
 .prose-blog h2,
 .prose-blog h3,
 .prose-blog h4 {
-  font-family: var(--font-instrument-serif), Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
   scroll-margin-top: 6rem;
 }
 
@@ -565,8 +565,8 @@
 }
 
 .post-year-heading {
-  font-family: var(--font-instrument-serif), Georgia, serif;
-  font-size: 1.7rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 1.1rem;
   line-height: 1;
   color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;

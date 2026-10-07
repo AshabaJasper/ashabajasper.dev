@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Monogram } from "@/components/shared/monogram";
+import { OPEN_PALETTE_EVENT, useIsMac } from "@/components/shared/command-center";
 import { publicPath, type NavItem } from "@/lib/links";
 import type { Site } from "@/lib/sites";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,8 @@ function isActive(item: NavItem, current: Site, path: string): boolean {
   return path === item.path || path.startsWith(`${item.path}/`);
 }
 
+const openPalette = () => window.dispatchEvent(new Event(OPEN_PALETTE_EVENT));
+
 export function SiteHeader({ site, homeHref, navItems }: {
   site: Exclude<Site, "admin">;
   homeHref: string;
@@ -24,34 +27,29 @@ export function SiteHeader({ site, homeHref, navItems }: {
 }) {
   const path = publicPath(usePathname() ?? "/");
   const [open, setOpen] = useState(false);
+  const mac = useIsMac();
 
   return (
-    <header className="bg-background/85 supports-[backdrop-filter]:bg-background/70 border-rule/70 sticky top-0 z-40 border-b backdrop-blur-md">
-      <div className="container-page flex h-16 items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <Link
-            href={homeHref}
-            className="group flex min-w-0 items-center gap-2.5 rounded-full"
-            aria-label="Ashaba Jasper, home"
-          >
-            <Monogram className="size-8 shrink-0" />
-            <span className="font-serif text-[1.35rem] leading-none tracking-[-0.01em] whitespace-nowrap">
-              Ashaba Jasper
-            </span>
+    <header className="bg-background/75 supports-[backdrop-filter]:bg-background/60 border-rule/80 sticky top-0 z-40 border-b backdrop-blur-xl backdrop-saturate-150">
+      <div className="container-page flex h-16 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <Link href={homeHref} className="group flex min-w-0 items-center gap-2.5 rounded-[10px]" aria-label="Ashaba Jasper, home">
+            <Monogram className="size-8 shrink-0 transition-transform duration-300 group-hover:-rotate-6" />
+            <span className="font-display text-[1.02rem] leading-none whitespace-nowrap">Ashaba Jasper</span>
           </Link>
           {site === "blog" ? (
             <>
-              <span aria-hidden className="text-muted-foreground/60 hidden font-serif text-[1.35rem] leading-none min-[420px]:inline">
+              <span aria-hidden className="text-muted-foreground/60 hidden font-mono text-[0.95rem] min-[420px]:inline">
                 /
               </span>
-              <Link href="/" className="text-muted-foreground hover:text-foreground hidden font-serif text-[1.35rem] leading-none italic min-[420px]:inline">
-                Writing
+              <Link href="/" className="text-muted-foreground hover:text-foreground hidden font-mono text-[0.85rem] min-[420px]:inline">
+                writing
               </Link>
             </>
           ) : null}
         </div>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 md:flex">
           {navItems.map((item) => {
             const active = isActive(item, site, path);
             return (
@@ -60,7 +58,7 @@ export function SiteHeader({ site, homeHref, navItems }: {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-3.5 py-2 text-[0.92rem] transition-colors",
+                  "rounded-full px-3 py-2 text-[0.88rem] transition-colors",
                   active ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -68,10 +66,29 @@ export function SiteHeader({ site, homeHref, navItems }: {
               </Link>
             );
           })}
-          <ThemeToggle className="ml-1" />
+          <button
+            type="button"
+            onClick={openPalette}
+            aria-label="Open the command palette"
+            aria-keyshortcuts={mac ? "Meta+K" : "Control+K"}
+            className="border-rule bg-card/60 text-muted-foreground hover:text-foreground hover:border-foreground/25 ml-2 inline-flex h-9 items-center gap-2 rounded-full border pr-1.5 pl-3 text-[0.8rem] transition-colors"
+          >
+            <Search aria-hidden className="size-3.5" strokeWidth={2} />
+            <span className="hidden lg:inline">Jump to</span>
+            <kbd className="kbd">{mac ? "⌘" : "Ctrl"} K</kbd>
+          </button>
+          <ThemeToggle className="ml-0.5" />
         </nav>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center md:hidden">
+          <button
+            type="button"
+            onClick={openPalette}
+            aria-label="Open the command palette"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-11 items-center justify-center rounded-full"
+          >
+            <Search aria-hidden className="size-[18px]" strokeWidth={1.75} />
+          </button>
           <ThemeToggle />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -85,11 +102,11 @@ export function SiteHeader({ site, homeHref, navItems }: {
             </SheetTrigger>
             <SheetContent side="right" className="w-[min(20rem,85vw)]">
               <SheetHeader>
-                <SheetTitle className="font-serif text-2xl font-normal">Menu</SheetTitle>
+                <SheetTitle className="kicker kicker-prompt font-normal">menu</SheetTitle>
                 <SheetDescription className="sr-only">Site navigation</SheetDescription>
               </SheetHeader>
               <nav aria-label="Mobile" className="flex flex-col px-4 pb-6">
-                {navItems.map((item) => {
+                {navItems.map((item, i) => {
                   const active = isActive(item, site, path);
                   return (
                     <Link
@@ -98,10 +115,13 @@ export function SiteHeader({ site, homeHref, navItems }: {
                       aria-current={active ? "page" : undefined}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "border-rule flex min-h-12 items-center border-b font-serif text-[1.75rem] leading-none",
+                        "border-rule flex min-h-14 items-baseline gap-3 border-b font-display text-[1.75rem] leading-none",
                         active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
+                      <span aria-hidden className="text-primary font-mono text-[0.75rem] font-normal tracking-normal">
+                        0{i + 1}
+                      </span>
                       {item.label}
                     </Link>
                   );

@@ -44,7 +44,6 @@ export function postKicker(post: { series: { name: string; part: number } | null
 
 /** Names whose spelling a plain capitalisation would get wrong. */
 const TAG_NAMES: Readonly<Record<string, string>> = {
-  "jasper-os": "Jasper OS",
   nextjs: "Next.js",
   typescript: "TypeScript",
   javascript: "JavaScript",

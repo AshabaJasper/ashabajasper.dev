@@ -5,66 +5,84 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design tokens for ashabajasper.dev. Editorial, quiet, one accent.
- * See DESIGN.md before changing anything here.
+ * Design tokens for ashabajasper.dev. Direction: a developer's workbench.
+ * Dark-first, grotesk and mono, one signal accent. See DESIGN.md before
+ * changing anything here.
  */
 :root {
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  --background: #fafaf8;
-  --foreground: #1b1f23;
+  --background: #f7f7f4;
+  --foreground: #0d0e10;
   --card: #ffffff;
-  --card-foreground: #1b1f23;
+  --card-foreground: #0d0e10;
   --popover: #ffffff;
-  --popover-foreground: #1b1f23;
-  --primary: #137c72;
+  --popover-foreground: #0d0e10;
+  --primary: #047857;
   --primary-foreground: #ffffff;
-  --secondary: #f0f1ee;
-  --secondary-foreground: #1b1f23;
-  --muted: #f0f1ee;
-  --muted-foreground: #5f6973;
-  --accent: #e3f1ee;
-  --accent-foreground: #0d5c55;
+  --secondary: #edede9;
+  --secondary-foreground: #0d0e10;
+  --muted: #efefeb;
+  --muted-foreground: #5c626b;
+  --accent: #dcf3e9;
+  --accent-foreground: #035c43;
   --destructive: #b42318;
-  --border: #e6e8ea;
-  --input: #d6dade;
-  --ring: #137c72;
+  --border: #e2e2dd;
+  --input: #cfd0ca;
+  --ring: #047857;
 
-  /* Editorial extras */
-  --rule: #e6e8ea;
-  --ink-soft: #3b434b;
-  --link: #137c72;
-  --link-hover: #0d5c55;
-  --highlight: #e3f1ee;
-  --code-bg: #f3f4f1;
+  --rule: #e2e2dd;
+  --ink-soft: #33373d;
+  --link: #047857;
+  --link-hover: #035c43;
+  --highlight: #cdeedf;
+  --code-bg: #efefeb;
+
+  /* Background texture and glow, used sparingly in heroes. */
+  --grid-dot: rgb(13 14 16 / 0.09);
+  --glow: rgb(4 120 87 / 0.1);
+
+  /* Work map categorical slots (validated all-pairs, see DESIGN.md). Websites are neutral. */
+  --viz-system: #1baf7a;
+  --viz-ecommerce: #eb6834;
+  --viz-mobile: #2a78d6;
+  --viz-website: #9a9ea6;
 }
 
 .dark {
-  --background: #121416;
-  --foreground: #e8eaec;
-  --card: #1a1d20;
-  --card-foreground: #e8eaec;
-  --popover: #1a1d20;
-  --popover-foreground: #e8eaec;
-  --primary: #8bd6c5;
-  --primary-foreground: #0b2e29;
-  --secondary: #1f2327;
-  --secondary-foreground: #e8eaec;
-  --muted: #1f2327;
-  --muted-foreground: #a3adb6;
-  --accent: #173a35;
-  --accent-foreground: #bdebdf;
+  --background: #0a0b0d;
+  --foreground: #ececee;
+  --card: #111317;
+  --card-foreground: #ececee;
+  --popover: #121418;
+  --popover-foreground: #ececee;
+  --primary: #3ddc97;
+  --primary-foreground: #03130b;
+  --secondary: #17191d;
+  --secondary-foreground: #ececee;
+  --muted: #15171b;
+  --muted-foreground: #959ba5;
+  --accent: #0f2a1f;
+  --accent-foreground: #9ff0c9;
   --destructive: #f97066;
-  --border: #2a2f34;
-  --input: #343a40;
-  --ring: #8bd6c5;
+  --border: #22252a;
+  --input: #2e3238;
+  --ring: #3ddc97;
 
-  --rule: #2a2f34;
-  --ink-soft: #c9cfd4;
-  --link: #8bd6c5;
-  --link-hover: #bdebdf;
-  --highlight: #173a35;
-  --code-bg: #181b1e;
+  --rule: #1f2226;
+  --ink-soft: #c5c9d0;
+  --link: #3ddc97;
+  --link-hover: #8ff0c4;
+  --highlight: #11392a;
+  --code-bg: #101215;
+
+  --grid-dot: rgb(236 236 238 / 0.075);
+  --glow: rgb(61 220 151 / 0.09);
+
+  --viz-system: #199e70;
+  --viz-ecommerce: #d95926;
+  --viz-mobile: #3987e5;
+  --viz-website: #61676f;
 }
 
 @theme inline {
@@ -94,7 +112,10 @@
   --color-code-bg: var(--code-bg);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  /* Display is the same grotesk, set heavy and tight (see .font-display below). */
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* The admin still uses font-serif for its titles; it now maps to the display grotesk. */
+  --font-serif: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
@@ -102,17 +123,64 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --animate-reveal: reveal 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-reveal: reveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes reveal {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* A line of display type rising out of its own clip box. */
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes scroll-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(56px) scale(0.965);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(4%);
+  }
+  to {
+    transform: translateX(-38%);
+  }
+}
+
+@keyframes caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes term-reveal {
+  to {
+    visibility: visible;
   }
 }
 
@@ -166,9 +234,21 @@
 }
 
 @layer components {
+  /* Display type: the grotesk, heavy and tight. Size utilities set the scale. */
+  .font-display {
+    font-weight: 600;
+    letter-spacing: -0.035em;
+  }
+
   /* Small uppercase mono label used above section headings and in metadata. */
   .kicker {
     @apply font-mono text-[0.72rem] font-medium tracking-[0.14em] text-muted-foreground uppercase;
+  }
+
+  /* A kicker with the accent prompt in front: "// selected work". */
+  .kicker-prompt::before {
+    content: "// ";
+    color: var(--primary);
   }
 
   /* Body links inside running text: accent colour, quiet underline that firms up on hover. */
@@ -181,14 +261,264 @@
     @apply bg-foreground text-background sr-only z-[100] rounded-md px-4 py-2 text-sm font-medium focus:not-sr-only focus:fixed focus:top-3 focus:left-3;
   }
 
-  /* Page container: 1120px content, 16px phone gutters, 24px tablet, 32px desktop. */
+  /* Page container: 1200px content, 16px phone gutters, 24px tablet, 32px desktop. */
   .container-page {
-    @apply mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Keyboard key cap. */
+  .kbd {
+    @apply border-rule bg-card text-muted-foreground inline-flex h-[1.45rem] min-w-[1.45rem] items-center justify-center rounded-[6px] border px-1.5 font-mono text-[0.7rem] leading-none font-medium;
+    box-shadow: inset 0 -1px 0 var(--rule);
+  }
+
+  /* Dotted engineering-paper texture, faded at the edges. Decorative only. */
+  .dot-grid {
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, #000 30%, transparent 75%);
   }
 
   /* Staggered entrance; each element sets --reveal-delay. No motion when reduced. */
   .reveal {
     animation: var(--animate-reveal);
     animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Kinetic display line: the text rises out of a clip box once, on load. */
+  .rise-line {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.06em;
+    margin-bottom: -0.06em;
+  }
+  .rise-line > span {
+    display: block;
+    animation: rise 0.9s cubic-bezier(0.2, 0.75, 0.15, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* The terminal surface stays dark in both themes, like a real one. */
+  .terminal {
+    --term-bg: #0b0c0e;
+    --term-bar: #111317;
+    --term-rule: #23262b;
+    --term-fg: #d9dce1;
+    --term-muted: #8b929c;
+    --term-accent: #3ddc97;
+    --term-info: #79c0ff;
+    --term-error: #ff8b80;
+    background: var(--term-bg);
+    color: var(--term-fg);
+    border: 1px solid var(--term-rule);
+  }
+  .terminal :focus-visible {
+    outline-color: var(--term-accent);
+  }
+  .term-caret {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.15em;
+    vertical-align: -0.2em;
+    background: var(--term-accent);
+    animation: caret 1.1s steps(1) infinite;
+  }
+}
+
+/*
+ * First view of the home page: an inline script marks <html> when the intro
+ * may play (motion allowed, not seen this session). The server-rendered
+ * terminal output stays hidden until the client takes over, with a timed
+ * fallback so it can never stay hidden if scripts fail after that point.
+ */
+html[data-term-intro="play"] .term-screen:not([data-live]) {
+  visibility: hidden;
+  animation: term-reveal 0s 2.5s forwards;
+}
+
+/* Scroll-driven motion: progressive enhancement, never under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .scroll-reveal {
+      animation: scroll-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+    .scroll-drift {
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+/* View transitions between a work card and its case study. */
+::view-transition-group(*) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.2, 0.75, 0.15, 1);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/*
+ * CV timeline: a hairline rail with a progress line that draws down as the
+ * list scrolls past the middle of the viewport, and nodes that light up as
+ * they cross it. Without scroll timelines (or with reduced motion) the rail
+ * is simply drawn and every node is lit.
+ */
+.cv-timeline {
+  position: relative;
+  view-timeline-name: --cv-rail;
+}
+.cv-timeline::before,
+.cv-timeline::after {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  bottom: 0.5rem;
+  left: 7px;
+  width: 1px;
+  background: var(--rule);
+}
+.cv-timeline::after {
+  width: 2px;
+  left: 6.5px;
+  background: linear-gradient(to bottom, var(--primary), color-mix(in srgb, var(--primary) 30%, transparent));
+  transform-origin: top;
+}
+.cv-node {
+  border-color: var(--primary);
+  background: var(--background);
+  box-shadow: 0 0 0 4px var(--background);
+}
+
+@keyframes rail-draw {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes node-light {
+  from {
+    border-color: var(--rule);
+    background: var(--background);
+  }
+  to {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+}
+@keyframes chip-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .cv-timeline::after {
+      animation: rail-draw linear both;
+      animation-timeline: --cv-rail;
+      animation-range: cover 0% cover 60%;
+    }
+    .cv-node {
+      animation: node-light linear both;
+      animation-timeline: view();
+      animation-range: entry 100% cover 45%;
+    }
+    .chip-pop {
+      animation: chip-pop linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 4%) entry calc(60% + var(--i, 0) * 4%);
+    }
+  }
+}
+
+/* Print: the CV and every other page print as clean black on white. */
+@media print {
+  :root,
+  .dark {
+    --background: #ffffff;
+    --foreground: #000000;
+    --card: #ffffff;
+    --muted: #f2f2f2;
+    --muted-foreground: #444444;
+    --ink-soft: #1f1f1f;
+    --rule: #d6d6d6;
+    --border: #d6d6d6;
+    --primary: #046c4e;
+    --link: #046c4e;
+  }
+  @page {
+    size: A4;
+    margin: 14mm 14mm 16mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    font-size: 10.5pt;
+  }
+  header.sticky,
+  footer,
+  [aria-label="Get in touch"],
+  .skip-link,
+  canvas,
+  .dot-grid {
+    display: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .scroll-reveal,
+  .chip-pop,
+  .reveal,
+  .rise-line > span {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .cv-node {
+    background: var(--primary);
+  }
+  .cv-entry,
+  #projects li,
+  #awards li,
+  #education li,
+  #skills dl > div {
+    break-inside: avoid;
+  }
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  a {
+    text-decoration: none !important;
+  }
+  main > header .container-page {
+    padding-top: 0 !important;
+    padding-bottom: 1.5rem !important;
+  }
+  main .container-page {
+    max-width: none;
+    padding-left: 0;
+    padding-right: 0;
   }
 }

@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { EmailLink } from "@/components/portfolio/email-link";
+import { Terminal } from "@/components/portfolio/terminal";
+import { TERM_INTRO_SCRIPT } from "@/components/portfolio/terminal-intro";
 import { WorkCard } from "@/components/portfolio/work-card";
-import { ArrowLink, ExternalLink, SectionHeading, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
+import { WorkMapSection } from "@/components/portfolio/work-map-section";
+import { ArrowLink, SectionHeading, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
 import { formatDate } from "@/components/portfolio/format";
-import { experience, experienceYears } from "@/data/experience";
+import { Backdrop } from "@/components/shared/backdrop";
+import { KbdHint } from "@/components/shared/kbd-hint";
+import { Magnetic } from "@/components/shared/motion";
+import { experience, experiencePeriod } from "@/data/experience";
 import { profile } from "@/data/profile";
 import { featuredWork, work } from "@/data/work";
 import { getAllPosts } from "@/lib/content/posts";
@@ -22,13 +27,6 @@ export const metadata: Metadata = pageMetadata({
   absoluteTitle: true,
   type: "profile",
 });
-
-const ELSEWHERE = [
-  { label: "GitHub", handle: "AshabaJasper", href: profile.links.github },
-  { label: "LinkedIn", handle: "ashaba-jasper-joshua", href: profile.links.linkedin },
-  { label: "X", handle: profile.xHandle, href: profile.links.x },
-  { label: "Google Developers", handle: "g.dev/ashaba_jasper", href: profile.links.googleDevelopers },
-] as const;
 
 function personJsonLd() {
   return {
@@ -47,11 +45,19 @@ function personJsonLd() {
   };
 }
 
+/** The roles shown on the home page; the full history lives on /cv. */
+const EXPERIENCE_HIGHLIGHT = ["persmon", "reveloop", "uganda-bookshop", "learnnovate"];
+
 export default async function HomePage() {
   const featured = featuredWork();
-  const posts = (await getAllPosts()).slice(0, 3);
-  const current = experience.filter((entry) => entry.kind === "work");
-  const education = experience.filter((entry) => entry.kind === "education");
+  const allPosts = await getAllPosts();
+  const posts = allPosts.slice(0, 3);
+  const highlights = EXPERIENCE_HIGHLIGHT.map((id) => experience.find((e) => e.id === id)).filter((e) => e !== undefined);
+  const termPosts = allPosts.slice(0, 5).map((post) => ({
+    title: post.title,
+    date: post.date,
+    href: crossHref("portfolio", "blog", `/${post.slug}`),
+  }));
 
   return (
     <>
@@ -62,141 +68,175 @@ export default async function HomePage() {
       />
 
       {/* Hero */}
-      <section aria-labelledby="hero-title" className="container-page pt-8 pb-20 sm:pt-16 sm:pb-28 lg:pt-24 lg:pb-36">
-        <div className="grid items-center gap-x-16 gap-y-6 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <figure
-            className="reveal lg:col-start-2 lg:row-start-1 lg:flex lg:flex-col lg:items-center"
-            style={{ "--reveal-delay": "0ms" } as React.CSSProperties}
-          >
-            <div className="border-rule bg-muted relative size-[72px] overflow-hidden rounded-full border sm:size-24 lg:size-[clamp(16rem,26vw,20rem)]">
-              <Image
-                src={profile.avatar.src}
-                alt={profile.avatar.alt}
-                fill
-                priority
-                sizes="(min-width: 1024px) 320px, 96px"
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="text-muted-foreground mt-5 hidden text-center font-mono text-[0.75rem] leading-relaxed lg:block">
-              {profile.fullName}
-            </figcaption>
-          </figure>
-
-          <div className="lg:col-start-1 lg:row-start-1">
-            <p className="kicker reveal" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
+      <section aria-labelledby="hero-title" className="relative isolate overflow-hidden">
+        <Backdrop className="-z-10" />
+        <div className="container-page grid grid-cols-[minmax(0,1fr)] items-center gap-x-12 gap-y-14 pt-10 pb-20 sm:pt-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:pt-24 lg:pb-32">
+          <div>
+            <p className="kicker reveal flex items-center gap-2.5">
+              <span aria-hidden className="relative flex size-2">
+                <span className="bg-primary absolute inset-0 animate-ping rounded-full opacity-60 motion-reduce:hidden" />
+                <span className="bg-primary relative size-2 rounded-full" />
+              </span>
               {profile.location}
             </p>
-            <h1
-              id="hero-title"
-              className="reveal mt-4 font-serif text-[clamp(3.5rem,11vw,6.5rem)] leading-[0.95] tracking-[-0.02em] sm:mt-5"
-              style={{ "--reveal-delay": "120ms" } as React.CSSProperties}
-            >
-              Ashaba <em className="italic">Jasper</em>
+            <h1 id="hero-title" className="font-display mt-6 text-[clamp(3.6rem,12.5vw,8.6rem)] leading-[0.86] tracking-[-0.055em]">
+              <span className="rise-line" style={{ "--reveal-delay": "60ms" } as React.CSSProperties}>
+                <span>Ashaba</span>
+              </span>
+              <span className="rise-line" style={{ "--reveal-delay": "160ms" } as React.CSSProperties}>
+                <span>
+                  Jasper<span className="text-primary">.</span>
+                </span>
+              </span>
             </h1>
             <p
-              className="reveal text-ink-soft mt-5 max-w-[34ch] text-[1.12rem] leading-[1.5] sm:mt-7 sm:text-[1.3rem]"
-              style={{ "--reveal-delay": "190ms" } as React.CSSProperties}
+              className="reveal text-foreground mt-7 font-mono text-[0.8rem] leading-relaxed sm:text-[0.86rem]"
+              style={{ "--reveal-delay": "300ms" } as React.CSSProperties}
+            >
+              {profile.headline.split(", ").map((role, i) => (
+                <span key={role}>
+                  {i > 0 ? <span aria-hidden className="text-primary px-2">/</span> : null}
+                  {i > 0 ? <span className="sr-only">, </span> : null}
+                  {role}
+                </span>
+              ))}
+            </p>
+            <p
+              className="reveal text-ink-soft mt-4 max-w-[44ch] text-[1.08rem] leading-[1.55] sm:text-[1.2rem]"
+              style={{ "--reveal-delay": "360ms" } as React.CSSProperties}
             >
               {profile.heroLine}
             </p>
             <div
               id="hero-actions"
-              className="reveal mt-7 flex flex-wrap items-center gap-3 sm:mt-9"
-              style={{ "--reveal-delay": "260ms" } as React.CSSProperties}
+              className="reveal mt-8 flex flex-wrap items-center gap-3"
+              style={{ "--reveal-delay": "440ms" } as React.CSSProperties}
             >
-              <a href="#work" className={buttonPrimary}>
-                See selected work
-                <ArrowDown aria-hidden className="size-4" strokeWidth={1.75} />
-              </a>
-              <EmailLink placement="hero" className={buttonSecondary}>
-                Email me
-              </EmailLink>
+              <Magnetic>
+                <EmailLink placement="hero" className={buttonPrimary}>
+                  Email me
+                  <ArrowRight aria-hidden className="size-4" strokeWidth={2} />
+                </EmailLink>
+              </Magnetic>
+              <Magnetic>
+                <a href="#work" className={buttonSecondary}>
+                  See selected work
+                  <ArrowDown aria-hidden className="size-4" strokeWidth={1.75} />
+                </a>
+              </Magnetic>
             </div>
+            <KbdHint className="reveal mt-7" />
           </div>
-        </div>
-      </section>
 
-      {/* Currently */}
-      <section aria-labelledby="currently-title" className="border-rule border-t">
-        <div className="container-page grid gap-10 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-          <SectionHeading id="currently-title" kicker="Currently" title="A software company and a non-profit." />
-          <dl className="grid gap-10 sm:grid-cols-2 sm:gap-12">
-            {current.map((item) => (
-              <div key={item.organisation} className="border-rule border-t pt-5">
-                <dt>
-                  <span className="font-serif text-[1.65rem] leading-tight tracking-[-0.01em]">
-                    {item.href ? (
-                      <ExternalLink href={item.href} className="decoration-primary underline-offset-[5px] hover:underline">
-                        {item.organisation}
-                      </ExternalLink>
-                    ) : (
-                      item.organisation
-                    )}
-                  </span>
-                  <span className="text-muted-foreground mt-1.5 block font-mono text-[0.78rem]">{item.role}</span>
-                </dt>
-                <dd className="text-ink-soft mt-3 leading-relaxed">{item.description}</dd>
-                <dd className="text-muted-foreground mt-3 font-mono text-[0.78rem]">{experienceYears(item)}</dd>
-              </div>
-            ))}
-          </dl>
+          <div id="terminal" className="reveal scroll-mt-24" style={{ "--reveal-delay": "250ms" } as React.CSSProperties}>
+            <script dangerouslySetInnerHTML={{ __html: TERM_INTRO_SCRIPT }} />
+            <Terminal posts={termPosts} blogHref={crossHref("portfolio", "blog", "/")} />
+            <p className="text-muted-foreground mt-3 text-center font-mono text-[0.72rem]">
+              A real terminal. Try <span className="text-foreground">projects</span>, <span className="text-foreground">stack</span> or{" "}
+              <span className="text-foreground">sudo</span>.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Selected work */}
-      <section id="work" aria-labelledby="work-title" className="border-rule scroll-mt-20 border-t">
-        <div className="container-page py-16 sm:py-24">
-          <SectionHeading id="work-title" kicker="Selected work" title="Five systems, in detail.">
+      <section id="work" aria-labelledby="work-title" className="scroll-mt-20">
+        <div className="container-page py-20 sm:py-28">
+          <SectionHeading id="work-title" index="01" kicker="Selected work" title="Five systems, in detail.">
             <ArrowLink href="/work">All {work.length} projects</ArrowLink>
           </SectionHeading>
-          <div className="mt-12 grid gap-x-8 gap-y-16 sm:mt-14 md:grid-cols-2 md:gap-y-20">
-            {featured.map((item) => (
-              <WorkCard key={item.slug} item={item} />
+          <div className="mt-14 grid gap-x-8 gap-y-20 md:grid-cols-2 sm:mt-16">
+            {featured.map((item, i) => (
+              <WorkCard key={item.slug} item={item} index={i} large={i === 0} />
             ))}
           </div>
-          <div className="mt-14 sm:mt-16">
-            <Link href="/work" className={buttonSecondary}>
-              See all {work.length} projects
+        </div>
+      </section>
+
+      {/* Kinetic band: the four kinds of work, drifting with the scroll. */}
+      <div aria-hidden className="border-rule overflow-hidden border-y py-6 sm:py-8">
+        <p className="scroll-drift font-display text-muted-foreground/35 text-[clamp(3rem,9vw,7.5rem)] leading-none whitespace-nowrap">
+          Systems <span className="text-primary/70">*</span> Websites <span className="text-primary/70">*</span> Online stores{" "}
+          <span className="text-primary/70">*</span> Mobile apps <span className="text-primary/70">*</span> Data pipelines{" "}
+          <span className="text-primary/70">*</span> Applied AI
+        </p>
+      </div>
+
+      {/* Work map */}
+      <section aria-labelledby="map-title">
+        <div className="container-page py-20 sm:py-28">
+          <SectionHeading id="map-title" index="02" kicker="Work map" title={`All ${work.length} projects, mapped.`}>
+            <p className="text-ink-soft max-w-[38ch] text-[0.95rem] leading-relaxed sm:text-right">
+              One mark per project. Group them, highlight a technology, then open any one.
+            </p>
+          </SectionHeading>
+          <div className="mt-12">
+            <WorkMapSection />
+          </div>
+        </div>
+      </section>
+
+      {/* Experience highlight */}
+      <section aria-labelledby="experience-title" className="border-rule border-t">
+        <div className="container-page grid gap-12 py-20 sm:py-28 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] lg:gap-16">
+          <div>
+            <SectionHeading id="experience-title" index="03" kicker="Experience" title="Where the work happened." />
+            <p className="text-ink-soft mt-6 max-w-[44ch] leading-relaxed">
+              Most recently, AI and data systems for a US radiology network. Before that, pipelines, models and stores for businesses in
+              Kampala.
+            </p>
+            <Link href="/cv" className={`${buttonPrimary} mt-8`}>
+              Read the full CV
+              <ArrowRight aria-hidden className="size-4" strokeWidth={2} />
             </Link>
           </div>
+          <ol className="border-rule border-t">
+            {highlights.map((entry) => (
+              <li key={entry.id} className="scroll-reveal border-rule grid gap-1.5 border-b py-6 sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-6">
+                <p className="text-muted-foreground pt-1 font-mono text-[0.75rem] tabular-nums">{experiencePeriod(entry)}</p>
+                <div>
+                  <h3 className="text-[1.15rem] leading-snug font-semibold tracking-[-0.015em]">{entry.role}</h3>
+                  <p className="text-ink-soft mt-0.5">{entry.organisation}</p>
+                  <p className="text-muted-foreground mt-2 text-[0.93rem] leading-relaxed">{entry.highlights[0]}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
       {/* Writing */}
       {posts.length > 0 ? (
         <section aria-labelledby="writing-title" className="border-rule border-t">
-          <div className="container-page py-16 sm:py-24">
-            <SectionHeading id="writing-title" kicker="Writing" title="Notes from the build.">
+          <div className="container-page py-20 sm:py-28">
+            <SectionHeading id="writing-title" index="04" kicker="Writing" title="Notes from the build.">
               <a
                 href={crossHref("portfolio", "blog", "/")}
-                className="group text-foreground inline-flex min-h-11 items-center gap-1.5 text-[0.95rem] font-medium"
+                className="group text-foreground inline-flex min-h-11 items-center gap-2 font-mono text-[0.82rem]"
               >
-                <span className="decoration-primary/60 underline-offset-4 group-hover:underline">All writing</span>
-                <span aria-hidden className="text-primary">
+                <span className="decoration-primary underline-offset-4 group-hover:underline">All writing</span>
+                <span aria-hidden className="text-primary transition-transform group-hover:translate-x-1">
                   &rarr;
                 </span>
               </a>
             </SectionHeading>
-            <ol className="border-rule mt-10 border-t">
+            <ol className="border-rule mt-12 border-t">
               {posts.map((post) => (
                 <li key={post.slug} className="border-rule border-b">
                   <a
                     href={crossHref("portfolio", "blog", `/${post.slug}`)}
-                    className="group grid gap-2 py-7 sm:grid-cols-[10rem_minmax(0,1fr)] sm:gap-8"
+                    className="group grid gap-2 py-7 sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:items-baseline sm:gap-6"
                   >
-                    <time dateTime={post.date} className="text-muted-foreground pt-1.5 font-mono text-[0.78rem] tabular-nums">
+                    <time dateTime={post.date} className="text-muted-foreground font-mono text-[0.75rem] tabular-nums">
                       {formatDate(post.date, "short")}
                     </time>
                     <span>
-                      <span className="decoration-primary block font-serif text-[1.55rem] leading-tight tracking-[-0.01em] underline-offset-[5px] group-hover:underline">
+                      <span className="decoration-primary block text-[1.3rem] leading-snug font-semibold tracking-[-0.02em] underline-offset-[5px] group-hover:underline sm:text-[1.45rem]">
                         {post.title}
                       </span>
-                      <span className="text-ink-soft mt-2 block max-w-[62ch] leading-relaxed">{post.description}</span>
-                      <span className="text-muted-foreground mt-2 block font-mono text-[0.75rem]">
-                        {post.readingMinutes} min read
-                      </span>
+                      <span className="text-ink-soft mt-2 block max-w-[64ch] leading-relaxed">{post.description}</span>
                     </span>
+                    <span className="text-muted-foreground font-mono text-[0.72rem] whitespace-nowrap">{post.readingMinutes} min read</span>
                   </a>
                 </li>
               ))}
@@ -204,71 +244,6 @@ export default async function HomePage() {
           </div>
         </section>
       ) : null}
-
-      {/* Education. Work entries already appear under "Currently". */}
-      <section aria-labelledby="education-title" className="border-rule border-t">
-        <div className="container-page grid gap-10 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-          <SectionHeading id="education-title" kicker="Education" title="Where I studied." />
-          <ol className="border-rule border-t">
-            {education.map((entry) => {
-              const years = experienceYears(entry);
-              return (
-                <li key={entry.organisation} className="border-rule grid gap-1 border-b py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-6">
-                  <div>
-                    <h3 className="font-serif text-[1.5rem] leading-tight tracking-[-0.01em]">
-                      {entry.href ? (
-                        <ExternalLink href={entry.href} className="decoration-primary underline-offset-[5px] hover:underline">
-                          {entry.organisation}
-                        </ExternalLink>
-                      ) : (
-                        entry.organisation
-                      )}
-                    </h3>
-                    <p className="text-ink-soft mt-1">{entry.role}</p>
-                  </div>
-                  {years ? (
-                    <p className="text-muted-foreground font-mono text-[0.78rem] tabular-nums sm:pt-2">{years}</p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      {/* Elsewhere */}
-      <section aria-labelledby="elsewhere-title" className="border-rule border-t">
-        <div className="container-page grid gap-10 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
-          <SectionHeading id="elsewhere-title" kicker="Elsewhere" title="Find me online." />
-          <ul className="border-rule border-t">
-            {ELSEWHERE.map((link) => (
-              <li key={link.label} className="border-rule border-b">
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="me noopener"
-                  className="group flex min-h-14 items-center justify-between gap-4 py-3"
-                >
-                  <span className="text-[1.05rem]">{link.label}</span>
-                  <span className="text-muted-foreground group-hover:text-foreground flex min-w-0 items-center gap-2 font-mono text-[0.8rem] transition-colors">
-                    <span className="truncate">{link.handle}</span>
-                    <ArrowUpRight aria-hidden className="size-4 shrink-0" strokeWidth={1.75} />
-                  </span>
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              </li>
-            ))}
-            <li className="border-rule border-b">
-              <EmailLink placement="elsewhere" className="group flex min-h-14 items-center justify-between gap-4 py-3">
-                <span className="text-[1.05rem]">Email</span>
-                <span className="text-muted-foreground group-hover:text-foreground truncate font-mono text-[0.8rem] transition-colors">
-                  {profile.email}
-                </span>
-              </EmailLink>
-            </li>
-          </ul>
-        </div>
-      </section>
     </>
   );
 }

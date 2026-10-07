@@ -44,7 +44,7 @@ export default async function TagPage({ params }: Params) {
       </Link>
       <header className="mt-8 max-w-[46rem] sm:mt-12">
         <p className="kicker">Topic</p>
-        <h1 className="mt-4 font-serif text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4rem]">{tagLabel(tag)}</h1>
+        <h1 className="mt-4 font-display text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4rem]">{tagLabel(tag)}</h1>
         <p className="text-muted-foreground mt-4 font-mono text-[0.85rem] tabular-nums">
           {posts.length} {posts.length === 1 ? "post" : "posts"}
         </p>

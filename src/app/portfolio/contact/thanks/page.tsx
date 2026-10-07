@@ -20,7 +20,7 @@ export default function ContactThanksPage() {
   return (
     <section aria-labelledby="thanks-title" className="container-page flex min-h-[60vh] flex-col justify-center py-20 sm:py-28">
       <p className="kicker">Message sent</p>
-      <h1 id="thanks-title" className="mt-4 max-w-[16ch] font-serif text-[2.75rem] leading-[1] tracking-[-0.02em] sm:text-[4.25rem]">
+      <h1 id="thanks-title" className="font-display mt-4 max-w-[16ch] text-[clamp(2.6rem,7vw,5rem)] leading-[0.95]">
         Thank you. Your message is with me.
       </h1>
       <div className="text-ink-soft mt-6 max-w-[56ch] space-y-4 text-[1.06rem] leading-relaxed sm:text-lg">

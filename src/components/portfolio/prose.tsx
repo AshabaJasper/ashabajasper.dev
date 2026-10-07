@@ -9,7 +9,7 @@ export function Prose({ children, className }: { children: React.ReactNode; clas
     <div
       className={cn(
         "text-ink-soft max-w-[68ch] text-[1.06rem] leading-[1.75] sm:text-[1.1rem]",
-        "[&_h2]:text-foreground [&_h2]:mt-14 [&_h2]:font-serif [&_h2]:text-[1.9rem] [&_h2]:leading-tight [&_h2]:tracking-[-0.01em] [&>h2:first-child]:mt-0",
+        "[&_h2]:text-foreground [&_h2]:mt-14 [&_h2]:font-display [&_h2]:text-[1.9rem] [&_h2]:leading-tight [&_h2]:tracking-[-0.01em] [&>h2:first-child]:mt-0",
         "[&_h3]:text-foreground [&_h3]:mt-8 [&_h3]:text-[1.06rem] [&_h3]:font-semibold [&_h3+p]:mt-2",
         "[&_p]:mt-5 [&_ul]:mt-5 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5 [&_li]:marker:text-muted-foreground",
         "[&_strong]:text-foreground [&_strong]:font-semibold",

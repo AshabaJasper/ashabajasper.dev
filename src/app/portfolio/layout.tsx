@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { CommandCenter } from "@/components/shared/command-center";
+import { ViewTransitions } from "@/components/shared/view-transitions";
+import { getAllPosts } from "@/lib/content/posts";
 import { Umami } from "@/components/analytics/umami";
 import { StickyCta } from "@/components/portfolio/sticky-cta";
 import { profile } from "@/data/profile";
@@ -19,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PortfolioLayout({ children }: { children: React.ReactNode }) {
+export default async function PortfolioLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <a href="#main" className="skip-link">
@@ -34,6 +37,12 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
       <SiteFooter site="portfolio" />
       {/* Renders only on the home, work, case study and contact pages, under 768px. */}
       <StickyCta />
+      <CommandCenter
+        posts={(await getAllPosts()).map((post) => ({ slug: post.slug, title: post.title }))}
+        portfolioPrefix={""}
+        blogPrefix={siteOrigin("blog")}
+      />
+      <ViewTransitions />
       <Umami />
     </>
   );

@@ -34,7 +34,7 @@ export default function ContactPage() {
             <p className="mt-2">
               <EmailLink
                 placement="contact-page"
-                className="text-link hover:text-link-hover inline-flex min-h-11 items-center font-serif text-[1.5rem] break-all underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current sm:text-[1.75rem]"
+                className="text-link hover:text-link-hover inline-flex min-h-11 items-center font-mono text-[1.15rem] break-all underline decoration-current/30 underline-offset-4 transition-colors hover:decoration-current sm:text-[1.25rem]"
               />
             </p>
             <p className="text-muted-foreground mt-1 text-sm">The quickest way to reach me.</p>
@@ -46,7 +46,7 @@ export default function ContactPage() {
         </aside>
 
         <section id="contact-form-section" aria-labelledby="form-title" className="scroll-mt-24">
-          <h2 id="form-title" className="font-serif text-[2rem] leading-tight tracking-[-0.01em]">
+          <h2 id="form-title" className="font-display text-[2rem] leading-tight">
             Send a message
           </h2>
           <p className="text-muted-foreground mt-2 mb-8 text-[0.95rem]">All fields are required unless marked optional.</p>

@@ -64,6 +64,6 @@ export const config = {
   // Static files keep their URL on every host. .txt and .xml are not excluded
   // on purpose: robots.txt, sitemap.xml and feed.xml are per-site routes.
   matcher: [
-    "/((?!_next/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf|css|js|map|webmanifest)$).*)",
+    "/((?!_next/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|otf|css|js|map|webmanifest|pdf)$).*)",
   ],
 };

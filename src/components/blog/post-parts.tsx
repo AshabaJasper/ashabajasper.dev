@@ -14,7 +14,7 @@ export function SeriesNav({ name, parts, currentSlug }: { name: string; parts: P
   return (
     <nav aria-labelledby="series-heading" className="series-box">
       <p className="kicker">Series</p>
-      <h2 id="series-heading" className="mt-2 font-serif text-[1.55rem] leading-tight">
+      <h2 id="series-heading" className="mt-2 font-display text-[1.55rem] leading-tight">
         {name}
       </h2>
       <ol className="mt-4 space-y-1">
@@ -74,7 +74,7 @@ export function PostPager({ older, newer }: { older: PostSummary | null; newer: 
             <ArrowLeft aria-hidden className="size-3.5" strokeWidth={1.75} />
             Previous
           </span>
-          <span className="mt-2 block font-serif text-[1.35rem] leading-snug">{older.title}</span>
+          <span className="mt-2 block font-display text-[1.35rem] leading-snug">{older.title}</span>
         </Link>
       ) : (
         <span aria-hidden className="hidden sm:block" />
@@ -85,7 +85,7 @@ export function PostPager({ older, newer }: { older: PostSummary | null; newer: 
             Next
             <ArrowRight aria-hidden className="size-3.5" strokeWidth={1.75} />
           </span>
-          <span className="mt-2 block font-serif text-[1.35rem] leading-snug">{newer.title}</span>
+          <span className="mt-2 block font-display text-[1.35rem] leading-snug">{newer.title}</span>
         </Link>
       ) : null}
     </nav>
@@ -104,7 +104,7 @@ export function AuthorCard() {
       />
       <div>
         <p className="kicker">Written by</p>
-        <p className="mt-1 font-serif text-[1.5rem] leading-tight">{profile.name}</p>
+        <p className="mt-1 font-display text-[1.5rem] leading-tight">{profile.name}</p>
         <p className="text-ink-soft mt-2 max-w-[56ch] text-[0.98rem] leading-relaxed">{profile.heroLine}</p>
         <Link href={crossHref("blog", "portfolio", "/about")} className="link mt-2 inline-flex min-h-11 items-center text-[0.95rem]">
           More about me

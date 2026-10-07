@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { Backdrop } from "@/components/shared/backdrop";
+import { Scramble } from "@/components/shared/motion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -8,30 +10,37 @@ import { cn } from "@/lib/utils";
  */
 
 export const buttonPrimary =
-  "bg-primary text-primary-foreground hover:bg-primary/90 inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-[0.94rem] font-medium transition-colors";
+  "bg-foreground text-background hover:bg-primary hover:text-primary-foreground inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 text-[0.92rem] font-medium transition-colors duration-200";
 
 export const buttonSecondary =
-  "border-rule text-foreground hover:border-foreground/30 hover:bg-muted inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-6 text-[0.94rem] font-medium transition-colors";
+  "border-rule bg-card/50 text-foreground hover:border-foreground/30 hover:bg-muted inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-6 text-[0.92rem] font-medium transition-colors duration-200";
 
 export function SectionHeading({
   id,
   kicker,
   title,
+  index,
   className,
   children,
 }: {
   id: string;
   kicker: string;
   title: string;
+  /** "01", "02": a quiet section counter in front of the kicker. */
+  index?: string;
   className?: string;
   children?: React.ReactNode;
 }) {
   return (
-    <div className={cn("flex flex-col gap-4 self-start sm:flex-row sm:items-end sm:justify-between", className)}>
+    <div className={cn("flex flex-col gap-5 self-start sm:flex-row sm:items-end sm:justify-between", className)}>
       <div>
-        <p className="kicker">{kicker}</p>
-        <h2 id={id} className="mt-3 font-serif text-[2rem] leading-[1.05] tracking-[-0.015em] sm:text-[2.5rem]">
-          {title}
+        <p className="kicker flex items-center gap-3">
+          {index ? <span className="text-primary">{index}</span> : null}
+          <span aria-hidden className="bg-rule h-px w-8" />
+          {kicker}
+        </p>
+        <h2 id={id} className="font-display mt-4 max-w-[22ch] text-[clamp(2rem,4.6vw,3.4rem)] leading-[1]">
+          <Scramble text={title} />
         </h2>
       </div>
       {children}
@@ -39,15 +48,17 @@ export function SectionHeading({
   );
 }
 
-/** Next.js · NestJS · TypeScript, in mono. Renders nothing for an empty stack. */
+/** Next.js · NestJS · TypeScript as small mono chips. Renders nothing for an empty stack. */
 export function StackLine({ stack, className }: { stack: readonly string[]; className?: string }) {
   if (stack.length === 0) return null;
   return (
-    <p className={cn("text-muted-foreground font-mono text-[0.78rem] leading-relaxed", className)}>
-      <span className="sr-only">Built with </span>
-      {/* A no-break space keeps each middot with the item before it, so no line starts or ends on a lone dot. */}
-      {stack.join(" · ")}
-    </p>
+    <ul className={cn("flex flex-wrap gap-1.5", className)} aria-label="Built with">
+      {stack.map((tech) => (
+        <li key={tech} className="border-rule text-muted-foreground rounded-full border px-2.5 py-0.5 font-mono text-[0.7rem] leading-relaxed">
+          {tech}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -63,11 +74,26 @@ export function PageHeader({
   children?: React.ReactNode;
 }) {
   return (
-    <header className="container-page pt-14 pb-10 sm:pt-20 sm:pb-14">
-      <p className="kicker">{kicker}</p>
-      <h1 className="mt-4 max-w-[18ch] font-serif text-[2.75rem] leading-[1] tracking-[-0.02em] sm:text-[4rem]">{title}</h1>
-      {lede ? <div className="text-ink-soft mt-6 max-w-[60ch] text-[1.06rem] leading-relaxed sm:text-lg">{lede}</div> : null}
-      {children}
+    <header className="relative isolate overflow-hidden">
+      <Backdrop className="-z-10" />
+      <div className="container-page pt-14 pb-12 sm:pt-24 sm:pb-16">
+        <p className="kicker kicker-prompt reveal">{kicker.toLowerCase()}</p>
+        <h1
+          className="font-display reveal mt-5 max-w-[16ch] text-[clamp(2.6rem,7.5vw,5.5rem)] leading-[0.95]"
+          style={{ "--reveal-delay": "80ms" } as React.CSSProperties}
+        >
+          {title}
+        </h1>
+        {lede ? (
+          <div
+            className="text-ink-soft reveal mt-6 max-w-[60ch] text-[1.06rem] leading-relaxed sm:text-lg"
+            style={{ "--reveal-delay": "160ms" } as React.CSSProperties}
+          >
+            {lede}
+          </div>
+        ) : null}
+        {children}
+      </div>
     </header>
   );
 }
@@ -98,13 +124,10 @@ export function ArrowLink({ href, children, className }: { href: string; childre
   return (
     <Link
       href={href}
-      className={cn(
-        "group text-foreground inline-flex min-h-11 items-center gap-1.5 text-[0.95rem] font-medium",
-        className,
-      )}
+      className={cn("group text-foreground inline-flex min-h-11 items-center gap-2 font-mono text-[0.82rem]", className)}
     >
-      <span className="decoration-primary/60 underline-offset-4 group-hover:underline">{children}</span>
-      <span aria-hidden className="text-primary transition-transform duration-200 group-hover:translate-x-0.5">
+      <span className="decoration-primary underline-offset-4 group-hover:underline">{children}</span>
+      <span aria-hidden className="text-primary transition-transform duration-200 group-hover:translate-x-1">
         &rarr;
       </span>
     </Link>

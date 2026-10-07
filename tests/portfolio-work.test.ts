@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { experience, experienceYears } from "@/data/experience";
+import * as cv from "@/data/cv";
+import { experience, experienceMonths, experiencePeriod } from "@/data/experience";
 import { featuredWork, sectors, work, workBySlug, workKinds } from "@/data/work";
 
 const EM_DASH = String.fromCharCode(0x2014);
@@ -15,7 +16,7 @@ describe("portfolio work data", () => {
   it("has all 47 Persmon projects", () => {
     expect(work).toHaveLength(47);
     const byKind = Object.fromEntries(workKinds.map(({ kind }) => [kind, work.filter((w) => w.kind === kind).length]));
-    // Persmon lists 6 systems, 35 websites, 3 online shops and 3 mobile apps; Jasper OS is one more system.
+    // Persmon lists 6 systems, 35 websites, 3 online shops and 3 mobile apps.
     expect(byKind).toEqual({ system: 6, website: 35, ecommerce: 3, mobile: 3 });
   });
 
@@ -74,12 +75,35 @@ describe("portfolio work data", () => {
     expect(new Set(sectors.map((s) => s.slug)).size).toBe(sectors.length);
   });
 
-  it("uses verified organisation and education dates without implying a founding date", () => {
-    expect(experience).toHaveLength(3);
-    expect(experienceYears(experience[0])).toBe("With Persmon since 2022");
-    expect(experienceYears(experience[1])).toBe("2022 to now");
-    expect(experienceYears(experience[2])).toBe("2022 to 2024");
-    expect(experienceYears({ ...experience[1], startYear: null, endYear: null })).toBeNull();
-    expect(experienceYears({ ...experience[1], startYear: 2023, endYear: null })).toBe("2023 to now");
+  it("carries the CV history with dated entries and an undated current COO role", () => {
+    expect(experience[0].id).toBe("persmon");
+    expect(experience[0].start).toBeNull();
+    expect(experiencePeriod(experience[0])).toBe("Present");
+    const byId = Object.fromEntries(experience.map((e) => [e.id, e]));
+    expect(experiencePeriod(byId.reveloop)).toBe("Feb 2025 to Jun 2026");
+    expect(experiencePeriod(byId["excellent-shop"])).toBe("Feb 2024 to Jan 2025");
+    expect(experiencePeriod(byId["uganda-bookshop"])).toBe("May 2023 to Aug 2024");
+    expect(experiencePeriod(byId["centenary-publishing"])).toBe("Aug 2023 to Apr 2024");
+    expect(experiencePeriod(byId["blue-pearls"])).toBe("Apr 2021 to Jun 2024");
+    expect(experiencePeriod(byId["mtn-uganda"])).toBe("Jul 2023 to Sep 2023");
+    expect(experiencePeriod(byId.decades)).toBe("Sep 2019 to Feb 2021");
+    expect(experiencePeriod(byId.learnnovate)).toBe("Dec 2022 to present");
+    expect(experiencePeriod(byId["radiant-smile"])).toBe("Jun 2023 to present");
+    expect(experiencePeriod(byId.ucu)).toBe("Jan 2022 to Jul 2024");
+    expect(byId.ucu.role).toContain("4.62/5.0");
+    expect(new Set(experience.map((e) => e.id)).size).toBe(experience.length);
+  });
+
+  it("counts months inclusively and leaves unknown starts unknown", () => {
+    const now = { year: 2026, month: 10 };
+    expect(experienceMonths(experience[0], now)).toBeNull();
+    expect(experienceMonths({ start: { year: 2023, month: 7 }, end: { year: 2023, month: 9 } }, now)).toBe(3);
+    expect(experienceMonths({ start: { year: 2026, month: 1 }, end: "present" }, now)).toBe(10);
+  });
+
+  it("never publishes CV phone numbers or referees", () => {
+    const text = JSON.stringify({ experience, cv });
+    expect(text).not.toMatch(/\+256|\d{3} \d{3} \d{3}/);
+    expect(text).not.toMatch(/Karibwije|Indibatya/);
   });
 });

@@ -18,7 +18,7 @@ export default async function TagsPage() {
     <div className="container-page pt-14 pb-8 sm:pt-20">
       <header className="max-w-[46rem]">
         <p className="kicker">Writing</p>
-        <h1 className="mt-4 font-serif text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4rem]">Topics</h1>
+        <h1 className="mt-4 font-display text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4rem]">Topics</h1>
         <p className="text-ink-soft mt-5 max-w-[56ch] text-[1.1rem] leading-relaxed">
           Every post is filed under a few topics. Pick one to read everything written about it.
         </p>
@@ -29,7 +29,7 @@ export default async function TagsPage() {
           {tags.map(({ tag, count }) => (
             <li key={tag} className="border-rule border-t">
               <Link href={tagPath(tag)} className="group flex min-h-16 items-baseline justify-between gap-4 py-4 pr-4">
-                <span className="font-serif text-[1.45rem] leading-tight group-hover:underline group-hover:decoration-link/60 group-hover:underline-offset-4">
+                <span className="font-display text-[1.45rem] leading-tight group-hover:underline group-hover:decoration-link/60 group-hover:underline-offset-4">
                   {tagLabel(tag)}
                 </span>
                 <span className="text-muted-foreground font-mono text-[0.8rem] tabular-nums">

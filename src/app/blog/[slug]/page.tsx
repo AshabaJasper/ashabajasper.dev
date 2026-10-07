@@ -96,7 +96,7 @@ export default async function PostPage({ params }: Params) {
       <div className="post-grid mt-8 sm:mt-12">
         <header className="post-header">
           <p className="kicker">{postKicker(post)}</p>
-          <h1 className="mt-4 font-serif text-[2.6rem] leading-[1.02] tracking-[-0.02em] sm:text-[3.6rem] lg:text-[4rem]">
+          <h1 className="mt-4 font-display text-[2.6rem] leading-[1.02] tracking-[-0.02em] sm:text-[3.6rem] lg:text-[4rem]">
             {post.title}
           </h1>
           <p className="text-ink-soft mt-6 max-w-[60ch] text-[1.2rem] leading-relaxed sm:text-[1.3rem]">

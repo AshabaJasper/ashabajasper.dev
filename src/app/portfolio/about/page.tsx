@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { EmailLink } from "@/components/portfolio/email-link";
 import { Prose } from "@/components/portfolio/prose";
-import { ExternalLink, PageHeader } from "@/components/portfolio/ui";
+import { ExternalLink, PageHeader, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
+import { awards, certifications, cvSummary } from "@/data/cv";
 import { profile } from "@/data/profile";
 import { pageMetadata } from "@/lib/seo";
 
@@ -53,12 +54,21 @@ const GITHUB_PROJECTS = [
 export default function AboutPage() {
   return (
     <>
-      <PageHeader kicker="About" title="I build practical systems, end to end." />
+      <PageHeader kicker="About" title="I build practical systems, end to end.">
+        <div id="hero-actions" className="mt-8 flex flex-wrap gap-3">
+          <Link href="/cv" className={buttonPrimary}>
+            Read the CV
+          </Link>
+          <EmailLink placement="about-header" className={buttonSecondary}>
+            Email me
+          </EmailLink>
+        </div>
+      </PageHeader>
 
       <div className="container-page grid gap-14 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-20">
         <Prose>
           <p className="!mt-0 text-foreground text-[1.2rem] leading-[1.65] sm:text-[1.3rem]">
-            I am {profile.fullName}, a software engineer and data scientist in Kampala, Uganda. I design and build
+            I am {profile.fullName}, a data scientist, AI/ML engineer and full-stack developer in Kampala, Uganda. I design and build
             practical systems end to end: data pipelines and models, REST APIs and full-stack web applications.
           </p>
           <p>
@@ -67,6 +77,9 @@ export default function AboutPage() {
             one set of books, the firm that needs to see its deadlines, the public that needs its data in a form it can
             use.
           </p>
+
+          <h2>In short</h2>
+          <p>{cvSummary}</p>
 
           <h2>What I do now</h2>
           <p>
@@ -97,7 +110,22 @@ export default function AboutPage() {
             <ExternalLink href="https://github.com/Learnnovate-Africa" className="link" icon={false}>
               Learnnovate
             </ExternalLink>
-            , a non-profit that teaches technology skills, where I have worked as founder and programme director since December 2022.
+            , a technology education non-profit, where I have been Founder and Program Director since December 2022. Its programmes have reached 200+ learners across multiple schools.
+          </p>
+
+          <h2>Before Persmon, and alongside it</h2>
+          <p>
+            From February 2025 to June 2026 I worked remotely as a data scientist and AI/ML engineer with Reveloop Tech Systems for
+            Envision Radiology, a US radiology network. There I built RadCareLoop, a multi-LLM follow-up analyser (Gemini, GPT and
+            Claude with a Judge arbitration layer) validated at 97.9% accuracy against a 10,000-report gold-standard dataset, a
+            document-intake pipeline for fax orders, DICOM computer vision on Azure Kubernetes Service and Grafana telemetry for the
+            RIS and PACS ecosystem.
+          </p>
+          <p>
+            Earlier roles took me through data engineering and BI at Uganda Bookshop, e-commerce and analytics at Excellent Shop,
+            Flutter apps at Centenary Publishing, predictive maintenance for fleets at Blue Pearls and Uganda Transporters, and an
+            internship in operations and monitoring at MTN Uganda. The <Link href="/cv" className="link">full CV</Link> has the
+            dates and results.
           </p>
 
           <h2>What I am learning</h2>
@@ -130,8 +158,32 @@ export default function AboutPage() {
 
           <h2>Education</h2>
           <p>
-            I studied at {profile.education.school} from January 2022 to July 2024, where I earned a {profile.education.degree}.
+            I studied at {profile.education.school} from January 2022 to July 2024, where I earned a {profile.education.degree}{" "}
+            with a GPA of {profile.education.gpa}. My capstone, Help Anonymous, was an AI-powered mental-health app with BERT and
+            LSTM sentiment analysis that reached 270+ active users.
           </p>
+          <p>
+            I was Lead of the Google Developer Student Club from 2022 to 2023, taking 100+ students through workshops on machine
+            learning, Python, TensorFlow and cloud, and General Secretary of the Data Science Society. In the same period I was
+            ranked among Africa&rsquo;s Top 100 in the Google Developer Community for Machine Learning and Cloud.
+          </p>
+
+          <h2>Recognition and certifications</h2>
+          <ul>
+            {awards.map((a) => (
+              <li key={a.title}>
+                {a.title}, {a.issuer} ({a.year})
+              </li>
+            ))}
+          </ul>
+          <p>Certifications include:</p>
+          <ul>
+            {certifications.map((c) => (
+              <li key={c.title}>
+                {c.title}, {c.issuer} ({c.year})
+              </li>
+            ))}
+          </ul>
 
           <h2>Get in touch</h2>
           <p>
@@ -148,7 +200,7 @@ export default function AboutPage() {
         </Prose>
 
         <aside aria-label="At a glance" className="lg:pt-2">
-          <div className="border-rule bg-muted relative aspect-square w-40 overflow-hidden rounded-[12px] border sm:w-48 lg:w-full">
+          <div className="border-rule bg-muted relative aspect-square w-40 overflow-hidden rounded-[var(--radius-xl)] border sm:w-48 lg:w-full">
             <Image
               src={profile.avatar.src}
               alt={profile.avatar.alt}
@@ -169,8 +221,12 @@ export default function AboutPage() {
             <div>
               <dt className="kicker">Education</dt>
               <dd className="mt-1">
-                {profile.education.degree}, {profile.education.school}
+                {profile.education.degree} (GPA {profile.education.gpa}), {profile.education.school}
               </dd>
+            </div>
+            <div>
+              <dt className="kicker">Recognition</dt>
+              <dd className="mt-1">Gold Award, Queen&rsquo;s Commonwealth Essay Competition (2021); Africa Top 100, Google Developer Community</dd>
             </div>
             <div>
               <dt className="kicker">Exploring</dt>

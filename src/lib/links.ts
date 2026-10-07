@@ -29,6 +29,7 @@ export interface NavItem {
 /** The primary navigation shared by the portfolio and blog headers. */
 export const PRIMARY_NAV: readonly NavItem[] = [
   { label: "Work", site: "portfolio", path: "/work" },
+  { label: "CV", site: "portfolio", path: "/cv" },
   { label: "Writing", site: "blog", path: "/" },
   { label: "About", site: "portfolio", path: "/about" },
   { label: "Contact", site: "portfolio", path: "/contact" },

@@ -70,7 +70,7 @@ async function CommentList({ slug }: { slug: string }) {
 export async function CommentsSection({ slug }: { slug: string }) {
   return (
     <section aria-labelledby="comments-heading" id="comments" className="border-rule mt-16 border-t pt-12">
-      <h2 id="comments-heading" className="font-serif text-[2rem] leading-tight tracking-[-0.01em]">
+      <h2 id="comments-heading" className="font-display text-[2rem] leading-tight tracking-[-0.01em]">
         Comments
       </h2>
       <p className="text-muted-foreground mt-2 max-w-[60ch] text-[0.95rem]">
@@ -88,7 +88,7 @@ export async function CommentsSection({ slug }: { slug: string }) {
       </Suspense>
 
       <div className="border-rule mt-12 border-t pt-10">
-        <h3 className="font-serif text-[1.6rem] leading-tight">Leave a comment</h3>
+        <h3 className="font-display text-[1.6rem] leading-tight">Leave a comment</h3>
         <div className="mt-6">
           <CommentForm postSlug={slug} />
         </div>

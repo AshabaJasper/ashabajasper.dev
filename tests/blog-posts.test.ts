@@ -50,7 +50,7 @@ describe.skipIf(files.length === 0)("published posts", () => {
 describe("tagLabel", () => {
   it("spells known names properly", () => {
     expect(tagLabel("nextjs")).toBe("Next.js");
-    expect(tagLabel("jasper-os")).toBe("Jasper OS");
+    expect(tagLabel("nextjs")).toBe("Next.js");
     expect(tagLabel("typescript")).toBe("TypeScript");
     expect(tagLabel("self-hosting")).toBe("Self-hosting");
   });
@@ -62,7 +62,7 @@ describe("tagLabel", () => {
 
   it("labels the kicker of a post outside a series by its first topic", () => {
     expect(postKicker({ series: null, tags: ["nextjs", "docker"] })).toBe("Next.js");
-    expect(postKicker({ series: { name: "Building Jasper OS", part: 2 }, tags: ["money"] })).toBe("Building Jasper OS, part 2");
+    expect(postKicker({ series: { name: "Building HMS", part: 2 }, tags: ["money"] })).toBe("Building HMS, part 2");
     expect(postKicker({ series: null, tags: [] })).toBe("Writing");
   });
 });

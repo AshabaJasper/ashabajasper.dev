@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
+import { CommandCenter } from "@/components/shared/command-center";
+import { ViewTransitions } from "@/components/shared/view-transitions";
+import { getAllPosts } from "@/lib/content/posts";
 import { Umami } from "@/components/analytics/umami";
 import { profile } from "@/data/profile";
 import { siteOrigin, siteUrl } from "@/lib/sites";
@@ -19,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogLayout({ children }: { children: React.ReactNode }) {
+export default async function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <a href="#main" className="skip-link">
@@ -32,6 +35,12 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <SiteFooter site="blog" />
+      <CommandCenter
+        posts={(await getAllPosts()).map((post) => ({ slug: post.slug, title: post.title }))}
+        portfolioPrefix={siteOrigin("portfolio")}
+        blogPrefix={""}
+      />
+      <ViewTransitions />
       <Umami />
     </>
   );

@@ -14,7 +14,7 @@ const PHONE_QUERY = "(max-width: 767.98px)";
 
 /** The conversion pages that get the bar. Never thanks, legal or 404 pages. */
 function wantsBar(path: string): boolean {
-  return path === "/" || path === "/work" || path === "/contact" || /^\/work\/[a-z0-9-]+$/.test(path);
+  return path === "/" || path === "/work" || path === "/cv" || path === "/contact" || /^\/work\/[a-z0-9-]+$/.test(path);
 }
 
 function readDismissed(): boolean {

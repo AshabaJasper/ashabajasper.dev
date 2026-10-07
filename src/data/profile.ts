@@ -1,7 +1,7 @@
 /**
  * Facts about the owner, used across the portfolio, blog, metadata and legal
  * pages. Sources: the GitHub profile README (AshabaJasper/AshabaJasper) and
- * the owner's answers on 7 October 2026. Nothing here is invented: unknown
+ * the owner's answers on 7 October 2026, and his CV (last updated June 2026). Nothing here is invented: unknown
  * values stay null and are listed as launch blockers in the checklist.
  */
 
@@ -11,6 +11,8 @@ export const profile = {
   /** Full legal name, used on legal pages and in structured data. */
   fullName: "Ashaba Joshua Jasper",
   role: "Software engineer and data scientist",
+  /** The CV's headline roles. */
+  headline: "Data Scientist, AI/ML Engineer, Full-Stack Developer",
   location: "Kampala, Uganda",
   heroLine:
     "Software engineer and data scientist in Kampala, building data, AI and business systems for East African organisations.",
@@ -21,18 +23,19 @@ export const profile = {
     {
       name: "Persmon Technologies",
       role: "Co-founder and COO",
-      description: "A Kampala software and digital studio with 47 projects in its portfolio, from hotel systems to civic data.",
+      description: "A Kampala software company with 47 shipped projects, from hotel systems to civic data.",
       href: "https://persmontechnologies.com",
     },
     {
       name: "Learnnovate",
-      role: "Building it",
+      role: "Founder and Program Director",
       description: "A non-profit that teaches technology skills.",
       href: "https://github.com/Learnnovate-Africa",
     },
   ],
   education: {
     degree: "BSc Computer Science, First Class Honours",
+    gpa: "4.62/5.0",
     school: "Uganda Christian University",
   },
   exploring: ["MLOps", "Data engineering", "Production-grade applied AI"],

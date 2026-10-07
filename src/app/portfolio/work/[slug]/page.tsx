@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EmailLink } from "@/components/portfolio/email-link";
 import { WorkImage } from "@/components/portfolio/work-image";
-import { ExternalLink, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
+import { vtImage, vtTitle } from "@/components/portfolio/work-card";
+import { Backdrop } from "@/components/shared/backdrop";
+import { Magnetic } from "@/components/shared/motion";
+import { ExternalLink, StackLine, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
 import { featuredWork, workBySlug } from "@/data/work";
 import { getAllPosts } from "@/lib/content/posts";
 import { crossHref } from "@/lib/links";
@@ -73,29 +76,38 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
 
   return (
     <article>
-      <header className="container-page pt-12 pb-10 sm:pt-20 sm:pb-14">
+      <header className="relative isolate overflow-hidden">
+        <Backdrop className="-z-10" />
+        <div className="container-page pt-12 pb-10 sm:pt-20 sm:pb-14">
         <nav aria-label="Breadcrumb">
           <Link href="/work" className="kicker hover:text-foreground inline-flex min-h-11 items-center transition-colors">
-            <span aria-hidden className="mr-2">
+            <span aria-hidden className="text-primary mr-2">
               &larr;
             </span>
-            Work / Case study
+            work / case study
           </Link>
         </nav>
-        <h1 className="mt-4 max-w-[20ch] font-serif text-[2.75rem] leading-[1] tracking-[-0.02em] sm:text-[4rem]">{item.name}</h1>
-        <p className="text-ink-soft mt-5 max-w-[46ch] font-serif text-[1.45rem] leading-snug italic sm:text-[1.75rem]">
-          {study.headline}
-        </p>
+        <h1
+          className="font-display mt-4 w-fit max-w-[18ch] text-[clamp(2.5rem,7vw,5.25rem)] leading-[0.95]"
+          style={{ viewTransitionName: vtTitle(item.slug) }}
+        >
+          {item.name}
+        </h1>
+        <p className="text-ink-soft mt-6 max-w-[46ch] text-[1.25rem] leading-snug sm:text-[1.5rem]">{study.headline}</p>
 
         {/* id="hero-actions": the sticky mobile bar waits until these scroll out of view. */}
         <div id="hero-actions" className="mt-8 flex flex-wrap gap-3">
-          <Link href="/contact" className={buttonPrimary}>
-            Discuss a similar project
-          </Link>
+          <Magnetic>
+            <Link href="/contact" className={buttonPrimary}>
+              Discuss a similar project
+            </Link>
+          </Magnetic>
           {liveLink ? (
-            <ExternalLink href={liveLink.href} className={buttonSecondary}>
-              {liveLink.label}
-            </ExternalLink>
+            <Magnetic>
+              <ExternalLink href={liveLink.href} className={buttonSecondary}>
+                {liveLink.label}
+              </ExternalLink>
+            </Magnetic>
           ) : null}
         </div>
 
@@ -108,19 +120,27 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
           ))}
           <div className="col-span-2 sm:min-w-[16rem] sm:flex-1">
             <dt className="kicker">Stack</dt>
-            <dd className="text-ink-soft mt-1.5 font-mono text-[0.8rem] leading-relaxed">{study.stack.join(" · ")}</dd>
+            <dd className="mt-2">
+              <StackLine stack={study.stack} />
+            </dd>
           </div>
         </dl>
+        </div>
       </header>
 
       <div className="container-page">
-        <WorkImage
+        <div className="border-rule bg-card rounded-[var(--radius-xl)] border p-2 sm:p-3">
+          <div className="overflow-hidden rounded-[calc(var(--radius-xl)-6px)]" style={{ viewTransitionName: vtImage(item.slug) }}>
+            <WorkImage
           slug={item.slug}
           name={item.name}
           alt={item.screenshotAlt}
-          sizes="(min-width: 1120px) 1056px, (min-width: 640px) calc(100vw - 48px), calc(100vw - 32px)"
-          priority
-        />
+              className="rounded-none border-0"
+              sizes="(min-width: 1200px) 1112px, (min-width: 640px) calc(100vw - 72px), calc(100vw - 48px)"
+              priority
+            />
+          </div>
+        </div>
       </div>
 
       {/* Phones: each label sits close above its content, with the large space between sections. */}
@@ -132,7 +152,9 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
         <ul className="border-rule max-w-[62ch] border-t">
           {study.built.map((line) => (
             <li key={line} className="border-rule flex gap-4 border-b py-4 leading-relaxed">
-              <span aria-hidden className="text-primary mt-[0.55em] block size-1.5 shrink-0 rounded-full bg-current" />
+              <span aria-hidden className="text-primary mt-[0.15em] shrink-0 font-mono text-[0.8rem]">
+                {String(study.built.indexOf(line) + 1).padStart(2, "0")}
+              </span>
               <span>{line}</span>
             </li>
           ))}
@@ -168,13 +190,13 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
             className="group border-rule flex flex-col gap-1.5 border-b py-7 sm:border-r sm:border-b-0 sm:pr-8"
           >
             <span className="kicker">&larr; Previous</span>
-            <span className="decoration-primary font-serif text-[1.5rem] leading-tight underline-offset-[5px] group-hover:underline">
+            <span className="decoration-primary font-display text-[1.4rem] leading-tight underline-offset-[5px] group-hover:underline">
               {previous.name}
             </span>
           </Link>
           <Link href={`/work/${next.slug}`} rel="next" className="group flex flex-col gap-1.5 py-7 sm:items-end sm:pl-8 sm:text-right">
             <span className="kicker">Next &rarr;</span>
-            <span className="decoration-primary font-serif text-[1.5rem] leading-tight underline-offset-[5px] group-hover:underline">
+            <span className="decoration-primary font-display text-[1.4rem] leading-tight underline-offset-[5px] group-hover:underline">
               {next.name}
             </span>
           </Link>
@@ -182,8 +204,9 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
       </nav>
 
       <section aria-labelledby="cta-title" className="container-page mt-20 sm:mt-28">
-        <div className="bg-card border-rule rounded-[12px] border px-6 py-12 sm:px-12 sm:py-16">
-          <h2 id="cta-title" className="max-w-[20ch] font-serif text-[2.25rem] leading-[1.05] tracking-[-0.015em] sm:text-[3rem]">
+        <div className="bg-card border-rule relative isolate overflow-hidden rounded-[var(--radius-xl)] border px-6 py-12 sm:px-12 sm:py-16">
+          <div aria-hidden className="dot-grid absolute inset-0 -z-10 opacity-70" />
+          <h2 id="cta-title" className="font-display max-w-[18ch] text-[clamp(2rem,4.6vw,3.2rem)] leading-[1]">
             Have a similar system to build?
           </h2>
           <p className="text-ink-soft mt-4 max-w-[52ch] leading-relaxed">

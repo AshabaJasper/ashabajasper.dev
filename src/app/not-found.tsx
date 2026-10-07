@@ -12,7 +12,7 @@ export default function RootNotFound() {
   return (
     <main id="main" className="container-page flex min-h-[70vh] flex-col justify-center py-24">
       <p className="kicker">Error 404</p>
-      <h1 className="mt-4 font-serif text-5xl leading-none tracking-[-0.02em] sm:text-7xl">Nothing lives here.</h1>
+      <h1 className="mt-4 font-display text-5xl leading-none tracking-[-0.02em] sm:text-7xl">Nothing lives here.</h1>
       <p className="text-muted-foreground mt-6 max-w-[48ch] text-lg">
         The page may have moved, or the address has a typo.
       </p>

@@ -28,7 +28,7 @@ export function WorkImage({ slug, name, alt, sizes, priority = false, className 
       <div className={cn(frame, "relative aspect-[16/10]")}>
         <div aria-hidden className="absolute inset-0 flex flex-col justify-between p-5 sm:p-7">
           <span className="kicker">Project</span>
-          <span className="text-ink-soft max-w-[14ch] font-serif text-[clamp(1.75rem,5vw,3.25rem)] leading-[1] tracking-[-0.015em]">
+          <span className="text-ink-soft max-w-[14ch] font-display text-[clamp(1.75rem,5vw,3.25rem)] leading-[1] tracking-[-0.015em]">
             {name}
           </span>
         </div>

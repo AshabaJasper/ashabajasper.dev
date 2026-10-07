@@ -13,7 +13,7 @@ export default function BlogNotFound() {
   return (
     <div className="container-page flex min-h-[60vh] flex-col justify-center py-20">
       <p className="kicker">Error 404</p>
-      <h1 className="mt-4 max-w-[16ch] font-serif text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4.4rem]">
+      <h1 className="mt-4 max-w-[16ch] font-display text-[3rem] leading-[0.98] tracking-[-0.02em] sm:text-[4.4rem]">
         That post is not here.
       </h1>
       <p className="text-ink-soft mt-6 max-w-[48ch] text-[1.12rem] leading-relaxed">

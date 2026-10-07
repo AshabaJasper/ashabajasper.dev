@@ -17,7 +17,7 @@ export function PostRow({ post, headingLevel = 3, shortDate = false }: { post: P
         {shortDate ? formatShortDate(post.date) : formatDate(post.date)}
       </time>
       <div className="min-w-0">
-        <Title className="font-serif text-[1.65rem] leading-[1.15] tracking-[-0.01em] sm:text-[1.85rem]">
+        <Title className="font-display text-[1.65rem] leading-[1.15] tracking-[-0.01em] sm:text-[1.85rem]">
           <Link
             href={`/${post.slug}`}
             className="decoration-link/60 underline-offset-[5px] group-hover:underline after:absolute after:inset-0 after:content-['']"

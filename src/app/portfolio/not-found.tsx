@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { NOT_FOUND_METADATA } from "@/components/portfolio/not-found-metadata";
 import { buttonPrimary } from "@/components/portfolio/ui";
+import { Backdrop } from "@/components/shared/backdrop";
 import { crossHref } from "@/lib/links";
 
 export const metadata: Metadata = NOT_FOUND_METADATA;
@@ -15,10 +16,17 @@ const LINKS = [
 
 export default function PortfolioNotFound() {
   return (
-    <section aria-labelledby="nf-title" className="container-page flex min-h-[65vh] flex-col justify-center py-20 sm:py-28">
-      <p className="kicker">Error 404</p>
-      <h1 id="nf-title" className="mt-4 font-serif text-[3.25rem] leading-[0.95] tracking-[-0.02em] sm:text-[6rem]">
-        Nothing lives here.
+    <section aria-labelledby="nf-title" className="relative isolate overflow-hidden">
+      <Backdrop className="-z-10" />
+      <div className="container-page flex min-h-[65vh] flex-col justify-center py-20 sm:py-28">
+      <p aria-hidden className="text-muted-foreground font-mono text-[0.8rem]">
+        <span className="text-primary">visitor@ashabajasper.dev</span>:~$ cd this-page
+        <br />
+        <span className="text-destructive">cd: no such file or directory</span>
+      </p>
+      <p className="kicker mt-8">Error 404</p>
+      <h1 id="nf-title" className="font-display mt-4 text-[clamp(3rem,10vw,7rem)] leading-[0.92]">
+        Nothing lives here<span className="text-primary">.</span>
       </h1>
       <p className="text-ink-soft mt-6 max-w-[46ch] text-[1.06rem] leading-relaxed sm:text-lg">
         The page may have moved, or the address has a typo. One of these will get you somewhere useful.
@@ -37,6 +45,7 @@ export default function PortfolioNotFound() {
           ))}
         </ul>
       </nav>
+      </div>
     </section>
   );
 }
