@@ -59,6 +59,8 @@ const TAG_NAMES: Readonly<Record<string, string>> = {
   api: "API",
   pwa: "PWA",
   "self-hosting": "Self-hosting",
+  whatsapp: "WhatsApp",
+  opencv: "OpenCV",
 };
 
 /** Tags are kebab-case in frontmatter; shown as capitalised words ("data-modelling" is "Data modelling"). */

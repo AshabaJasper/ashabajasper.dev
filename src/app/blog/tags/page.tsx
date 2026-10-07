@@ -40,7 +40,13 @@ export default async function TagsPage() {
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground mt-12">No topics yet. They appear here once posts are published.</p>
+        <p className="text-ink-soft mt-12">
+          Topics are listed here as posts are filed under them.{" "}
+          <Link href="/" className="link">
+            Read the latest writing
+          </Link>
+          .
+        </p>
       )}
     </div>
   );

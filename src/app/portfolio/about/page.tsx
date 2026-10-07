@@ -3,8 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { EmailLink } from "@/components/portfolio/email-link";
 import { Prose } from "@/components/portfolio/prose";
-import { ExternalLink, PageHeader, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
+import { ExternalLink, PageHeader, SectionHeading, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
+import { ChartNoAxesCombined, Wrench } from "lucide-react";
+import { NumbersBand, SkillGroups } from "@/components/portfolio/showcase";
+import { TechLogo } from "@/components/portfolio/tech";
 import { awards, certifications, cvSummary } from "@/data/cv";
+import { highlights } from "@/data/highlights";
 import { profile } from "@/data/profile";
 import { pageMetadata } from "@/lib/seo";
 
@@ -52,6 +56,8 @@ const GITHUB_PROJECTS = [
 ] as const;
 
 export default function AboutPage() {
+  const today = new Date();
+  const figures = highlights({ year: today.getUTCFullYear(), month: today.getUTCMonth() + 1 });
   return (
     <>
       <PageHeader kicker="About" title="I build practical systems, end to end.">
@@ -236,14 +242,21 @@ export default function AboutPage() {
           <ul className="border-rule mt-8 space-y-0.5 border-t pt-6">
             {(
               [
-                ["GitHub", profile.links.github],
-                ["LinkedIn", profile.links.linkedin],
-                ["X", profile.links.x],
-                ["Google Developers", profile.links.googleDevelopers],
+                ["GitHub", profile.links.github, "github"],
+                ["LinkedIn", profile.links.linkedin, null],
+                ["X", profile.links.x, "x"],
+                ["Google Developers", profile.links.googleDevelopers, "Google Developers"],
               ] as const
-            ).map(([label, href]) => (
+            ).map(([label, href, logo]) => (
               <li key={label}>
-                <ExternalLink href={href} className="text-ink-soft hover:text-foreground inline-flex min-h-11 items-center">
+                <ExternalLink href={href} className="text-ink-soft hover:text-foreground inline-flex min-h-11 items-center gap-2.5">
+                  {logo ? (
+                    <TechLogo name={logo} className="size-4" />
+                  ) : (
+                    <span aria-hidden className="bg-foreground text-background inline-flex size-4 items-center justify-center rounded-[3px] text-[0.6rem] font-bold">
+                      in
+                    </span>
+                  )}
                   {label}
                 </ExternalLink>
               </li>
@@ -251,6 +264,16 @@ export default function AboutPage() {
           </ul>
         </aside>
       </div>
+
+      <section aria-labelledby="about-numbers" className="container-page mt-24 sm:mt-32">
+        <SectionHeading id="about-numbers" icon={ChartNoAxesCombined} kicker="By the numbers" title="The short version, in figures." />
+        <NumbersBand items={figures} className="mt-10" />
+      </section>
+
+      <section aria-labelledby="about-tools" className="container-page mt-24 sm:mt-32">
+        <SectionHeading id="about-tools" icon={Wrench} kicker="Toolkit" title="What I build with." />
+        <SkillGroups className="mt-10" only={["languages", "ml", "genai", "data", "web", "mlops"]} />
+      </section>
     </>
   );
 }

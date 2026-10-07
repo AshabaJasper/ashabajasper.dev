@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, type LucideIcon } from "lucide-react";
+import { TechChips } from "@/components/portfolio/tech";
 import { Backdrop } from "@/components/shared/backdrop";
 import { Scramble } from "@/components/shared/motion";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ export function SectionHeading({
   kicker,
   title,
   index,
+  icon: Icon,
   className,
   children,
 }: {
@@ -28,6 +30,8 @@ export function SectionHeading({
   title: string;
   /** "01", "02": a quiet section counter in front of the kicker. */
   index?: string;
+  /** A lucide icon shown in a small tile beside the kicker. */
+  icon?: LucideIcon;
   className?: string;
   children?: React.ReactNode;
 }) {
@@ -35,6 +39,11 @@ export function SectionHeading({
     <div className={cn("flex flex-col gap-5 self-start sm:flex-row sm:items-end sm:justify-between", className)}>
       <div>
         <p className="kicker flex items-center gap-3">
+          {Icon ? (
+            <span aria-hidden className="bg-accent text-primary inline-flex size-8 items-center justify-center rounded-[9px]">
+              <Icon className="size-4" strokeWidth={1.9} />
+            </span>
+          ) : null}
           {index ? <span className="text-primary">{index}</span> : null}
           <span aria-hidden className="bg-rule h-px w-8" />
           {kicker}
@@ -48,18 +57,9 @@ export function SectionHeading({
   );
 }
 
-/** Next.js · NestJS · TypeScript as small mono chips. Renders nothing for an empty stack. */
+/** A stack as logo chips. Renders nothing for an empty stack. */
 export function StackLine({ stack, className }: { stack: readonly string[]; className?: string }) {
-  if (stack.length === 0) return null;
-  return (
-    <ul className={cn("flex flex-wrap gap-1.5", className)} aria-label="Built with">
-      {stack.map((tech) => (
-        <li key={tech} className="border-rule text-muted-foreground rounded-full border px-2.5 py-0.5 font-mono text-[0.7rem] leading-relaxed">
-          {tech}
-        </li>
-      ))}
-    </ul>
-  );
+  return <TechChips stack={stack} className={className} />;
 }
 
 export function PageHeader({

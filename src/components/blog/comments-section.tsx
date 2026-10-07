@@ -56,7 +56,7 @@ async function CommentList({ slug }: { slug: string }) {
     return <p className="text-muted-foreground mt-8">Comments are unavailable right now.</p>;
   }
   if (comments.length === 0) {
-    return <p className="text-muted-foreground mt-8">No comments yet.</p>;
+    return <p className="text-muted-foreground mt-8">Be the first to comment. Questions and corrections are welcome.</p>;
   }
   return (
     <ol className="mt-8 space-y-8" aria-label="Comments">

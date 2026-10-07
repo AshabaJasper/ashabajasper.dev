@@ -4,7 +4,8 @@
  *
  * Fails (exit 1) on schema errors, reserved or duplicate slugs, em dashes,
  * descriptions over 200 characters, a series part used twice, components
- * other than <Note>, and MDX that does not compile. Prints one line per post.
+ * outside MDX_COMPONENT_NAMES (src/components/blog/mdx-names.ts), and MDX
+ * that does not compile. Prints one line per post.
  * Exits 0 with a note when there are no posts yet.
  *
  * The MDX compile mirrors src/lib/content/mdx.tsx (remark-gfm, JS expressions
@@ -17,10 +18,11 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { parsePost, type Post } from "../src/lib/content/parse";
+import { MDX_COMPONENT_NAMES } from "../src/components/blog/mdx-names";
 
 const POSTS_DIR = path.join(process.cwd(), "content", "posts");
 const EM_DASH = String.fromCharCode(0x2014);
-const ALLOWED_COMPONENTS = new Set(["Note"]);
+const ALLOWED_COMPONENTS = new Set<string>(MDX_COMPONENT_NAMES);
 
 /** JSX component names used outside fenced and inline code. */
 function componentsUsed(body: string): string[] {
@@ -89,7 +91,7 @@ async function main(): Promise<number> {
     const body = matter(source).content;
     const unknown = componentsUsed(body).filter((name) => !ALLOWED_COMPONENTS.has(name));
     if (unknown.length > 0) {
-      problems.push(`${file}: unknown component ${unknown.map((n) => `<${n}>`).join(", ")}; only <Note> is available`);
+      problems.push(`${file}: unknown component ${unknown.map((n) => `<${n}>`).join(", ")}; available: ${MDX_COMPONENT_NAMES.join(", ")}`);
     }
     const compileError = await compiles(body);
     if (compileError) problems.push(`${file}: MDX does not compile: ${compileError}`);

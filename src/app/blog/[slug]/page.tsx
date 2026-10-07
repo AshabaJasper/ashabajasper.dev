@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3, MessageSquare, RefreshCw, Tag } from "lucide-react";
 import { profile } from "@/data/profile";
 import { getAllPosts, getPost } from "@/lib/content/posts";
 import { renderPostBody } from "@/lib/content/mdx";
@@ -95,24 +95,36 @@ export default async function PostPage({ params }: Params) {
 
       <div className="post-grid mt-8 sm:mt-12">
         <header className="post-header">
-          <p className="kicker">{postKicker(post)}</p>
-          <h1 className="mt-4 font-display text-[2.6rem] leading-[1.02] tracking-[-0.02em] sm:text-[3.6rem] lg:text-[4rem]">
+          <p className="kicker inline-flex items-center gap-2">
+            <Tag aria-hidden className="size-3.5" strokeWidth={1.75} />
+            {postKicker(post)}
+          </p>
+          <h1 className="mt-4 max-w-[17em] font-display text-[2.6rem] leading-[1.02] tracking-[-0.02em] [text-wrap:balance] sm:text-[3.6rem] lg:text-[4rem]">
             {post.title}
           </h1>
-          <p className="text-ink-soft mt-6 max-w-[60ch] text-[1.2rem] leading-relaxed sm:text-[1.3rem]">
+          <p className="text-ink-soft mt-6 max-w-[66ch] text-[1.2rem] leading-relaxed sm:text-[1.3rem]">
             {post.description}
           </p>
-          <p className="text-muted-foreground border-rule mt-8 flex flex-wrap gap-x-4 gap-y-1 border-t pt-4 font-mono text-[0.8rem] tabular-nums">
-            <span>
+          <p className="post-meta text-muted-foreground border-rule mt-8 border-t pt-4 font-mono text-[0.8rem] tabular-nums">
+            <span className="meta-item">
+              <CalendarDays aria-hidden strokeWidth={1.75} />
               <span className="sr-only">Published </span>
               <time dateTime={post.date}>{formatDate(post.date)}</time>
             </span>
             {post.updated && post.updated !== post.date ? (
-              <span>
+              <span className="meta-item">
+                <RefreshCw aria-hidden strokeWidth={1.75} />
                 Updated <time dateTime={post.updated}>{formatDate(post.updated)}</time>
               </span>
             ) : null}
-            <span>{formatReadingTime(post.readingMinutes)}</span>
+            <span className="meta-item">
+              <Clock3 aria-hidden strokeWidth={1.75} />
+              {formatReadingTime(post.readingMinutes)}
+            </span>
+            <a href="#comments" className="meta-item hover:text-foreground min-h-11 transition-colors">
+              <MessageSquare aria-hidden strokeWidth={1.75} />
+              Comments
+            </a>
           </p>
         </header>
 

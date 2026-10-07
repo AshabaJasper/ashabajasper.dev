@@ -41,17 +41,21 @@ describe("terminal commands", () => {
     expect(text(runCommand("project centenary-publishing", ctx).lines)).toContain("see it in the full list");
   });
 
-  it("never invents a year: unknown years say so", () => {
-    const unknown = work.find((w) => w.year === null)!;
-    expect(text(runCommand(`project ${unknown.slug}`, ctx).lines)).toContain("year not listed");
+  it("never invents a year or a stack, and never apologises for one", () => {
+    const undated = work.find((w) => w.year === null && w.stack.length === 0)!;
+    const out = text(runCommand(`project ${undated.slug}`, ctx).lines);
+    expect(out).toContain(undated.sector);
+    expect(out).not.toMatch(/20\d\d/);
+    expect(out).not.toMatch(/not listed|unknown|stack /i);
   });
 
-  it("stack counts come from the data and say how many projects list none", () => {
+  it("stack counts come from the data, with no caveats", () => {
     const counts = stackCounts();
     const out = text(runCommand("stack", ctx).lines);
     expect(out).toContain(counts[0].tech);
-    const withStack = work.filter((w) => w.stack.length > 0).length;
-    expect(out).toContain(`${withStack} of ${work.length} projects list a stack`);
+    expect(out).toContain(`${work.length} projects shipped`);
+    expect(out).toContain(`${counts.length} technologies`);
+    expect(out).not.toMatch(/not counted|not listed/i);
   });
 
   it("experience and skills come from the CV data", () => {

@@ -1,12 +1,18 @@
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { CopyButton } from "@/components/blog/copy-button";
+import { Callout, Card, Cards, Compare, CompareSide, Diagram, Node, Note, Stat, Stats, Step, Steps, Timeline } from "@/components/blog/mdx-figures";
+import { BookingTimeline, CnnLayers, RaceSequence } from "@/components/blog/post-diagrams";
 import { cn } from "@/lib/utils";
 
 /**
  * The only components a post may use, beyond standard Markdown: headings,
- * links, code blocks, tables and the <Note> callout. Heading anchors come
+ * links, code blocks, tables, the figures in mdx-figures.tsx (Callout and
+ * Note, Diagram with Node, Steps or Timeline with Step, Stats with Stat,
+ * Compare with CompareSide, Cards with Card) and the post-specific diagrams
+ * in post-diagrams.tsx. Keep MDX_COMPONENT_NAMES in sync: the content check
+ * reads it. Heading anchors come
  * from rehype-autolink-headings (the heading text is wrapped in a link to
  * itself, so a screen reader still reads the plain heading), code blocks
  * from rehype-pretty-code.
@@ -89,15 +95,6 @@ function Table({ className, ...props }: ComponentPropsWithoutRef<"table">) {
   );
 }
 
-export function Note({ title, children }: { title?: string; children?: ReactNode }) {
-  return (
-    <div role="note" className="post-note">
-      {title ? <p className="post-note-title">{title}</p> : null}
-      <div className="post-note-body">{children}</div>
-    </div>
-  );
-}
-
 export const mdxComponents = {
   h2: Heading2,
   h3: Heading3,
@@ -107,4 +104,19 @@ export const mdxComponents = {
   pre: Pre,
   table: Table,
   Note,
+  Callout,
+  Diagram,
+  Node,
+  Steps,
+  Timeline,
+  Step,
+  Stats,
+  Stat,
+  Compare,
+  CompareSide,
+  Cards,
+  Card,
+  BookingTimeline,
+  RaceSequence,
+  CnnLayers,
 };

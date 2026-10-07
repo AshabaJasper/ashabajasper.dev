@@ -10,11 +10,26 @@ A few years ago I put together a small project that reads a photo of a single ha
 
 In this post I rebuild that script step by step with current libraries, explain why each step exists, point out what the original got wrong, and finish with how I would take it from a script to something you can version, track and serve.
 
+<Diagram caption="The whole pipeline, from a photo of a letter to a prediction." summary="A photo of one handwritten capital letter is preprocessed with OpenCV: blurred, thresholded with Otsu so the ink is white on black, cropped to the ink, padded and centred in a 28 by 28 frame. A convolutional network with three convolution and pooling blocks extracts features, dense layers combine them, and a softmax over 26 classes gives the predicted letter.">
+  <Node icon="camera" label="Input" title="A photo of one letter" detail="Dark ink on light paper, anywhere in the frame" />
+  <Node icon="contrast" label="OpenCV" title="Preprocess" detail="Blur, Otsu threshold, crop to the ink, centre in 28 by 28" />
+  <Node icon="layers" label="CNN" title="Learn the strokes" detail="3 convolution and pooling blocks, 32 to 128 filters" />
+  <Node icon="brain" label="Dense" title="Combine features" detail="Dense layers of 64 and 128 units" />
+  <Node icon="check" label="Output" tone="accent" title="Pick the letter" detail="Softmax over 26 classes, A to Z" />
+</Diagram>
+
 ## What you need
 
 The original README pins NumPy 1.16, OpenCV 3.4, Keras 2.3 and TensorFlow 2.0. Those versions are long gone, so the excerpts below target TensorFlow 2 with the bundled Keras, a current NumPy, OpenCV (`opencv-python-headless` is enough), pandas and scikit-learn.
 
 The data is the [A to Z handwritten alphabets dataset on Kaggle](https://www.kaggle.com/sachinpatel21/az-handwritten-alphabets-in-csv-format). It is one CSV where each row is a letter: the first column is the label (0 for A up to 25 for Z) and the remaining 784 columns are the pixels of a 28 by 28 greyscale image, white ink on a black background. Download it and put it in a `data/` folder.
+
+<Stats caption="The shape of the dataset and the split used throughout this post.">
+  <Stat value="26" label="Classes, one per capital letter" />
+  <Stat value="784" label="Pixel columns per row" />
+  <Stat value="28×28" label="Greyscale image per letter" />
+  <Stat value="80/20" label="Train and test split, stratified" />
+</Stats>
 
 ## Step 1: load and split the data
 
@@ -107,15 +122,17 @@ def build_model() -> keras.Model:
 
 The convolutions learn local stroke patterns such as curves, corners and crossings. Pooling halves the spatial size after each block, so later filters see a larger part of the letter. By the time we flatten, the image has become a short vector of features, and the dense layers map that to a probability for each letter.
 
+<CnnLayers />
+
 The original one-hot encoded the labels with `to_categorical` and used `categorical_crossentropy`. Using `sparse_categorical_crossentropy` with integer labels is equivalent and saves memory and a step.
 
 ## Step 3: training
 
 The original used Adam with two callbacks: `ReduceLROnPlateau`, which cuts the learning rate by a factor of five when validation loss stalls, and `EarlyStopping`, which stops when it stops improving. Both are sensible. Two things were not.
 
-<Note title="Two problems in the original training step">
+<Callout type="warning" title="Two problems in the original training step">
 First, it trained for a single epoch, so the callbacks never had a chance to do anything. Second, it passed the test set as `validation_data`, which means the test set was steering the training. Any score measured on it afterwards is optimistic. Below I carve a validation set out of the training data and keep the test set untouched until the very end.
-</Note>
+</Callout>
 
 ```python title="train.py"
 import keras
@@ -218,9 +235,49 @@ def preprocess(gray: np.ndarray) -> np.ndarray:
 
 The margin of four pixels is my choice to roughly match how letters sit in the training images. Check it against your data by plotting a few preprocessed photos next to a few training samples; if they look different to you, they look different to the model too. Predicting is then one line: `LETTERS[model.predict(preprocess(gray)).argmax()]`, where `gray` comes from `cv2.imread(path, cv2.IMREAD_GRAYSCALE)`.
 
+Before moving on to production, here is everything that changed from the original script so far:
+
+<Compare caption="Every change in this post comes from a step above; the architecture itself is unchanged.">
+<CompareSide title="The original script" label="Before" tone="before">
+
+- Trained for a single epoch, so the callbacks never acted.
+- Passed the test set as validation data.
+- Pixels left in the 0 to 255 range.
+- A fixed threshold of 100, then the whole frame resized to 28 by 28.
+- The prediction grid took its titles from the labels.
+- Saved as `.h5`.
+
+</CompareSide>
+<CompareSide title="This rebuild" label="After" tone="after">
+
+- Up to 20 epochs, early stopping, best weights restored.
+- A validation split from the training data; the test set stays untouched.
+- Pixels scaled to 0 to 1, with a stratified, seeded split.
+- An Otsu threshold, cropped to the ink, padded and centred.
+- Predictions taken from `model.predict`.
+- Saved in the native `.keras` format.
+
+</CompareSide>
+</Compare>
+
 ## Step 6: from script to something you can run in production
 
 The script trains, saves and predicts in one go, with hard-coded Windows paths. That is fine for learning. For anything that other people rely on, I would split it into the files above and add three things: versioned data, tracked runs, and a small service.
+
+<Steps caption="The path from script to service, one tool per step.">
+<Step title="Version the data with DVC" icon="database">
+The large CSV becomes a small pointer file in Git, and `dvc pull` gives anyone the same bytes.
+</Step>
+<Step title="Track every run with MLflow" icon="chart">
+Each model file is linked to a data hash, its settings and its test score.
+</Step>
+<Step title="Serve it behind FastAPI" icon="server">
+One endpoint takes an image and returns the top three letters with probabilities.
+</Step>
+<Step title="Test the fragile part" icon="test">
+A small pytest suite guards the preprocessing, which is more likely to break than the model.
+</Step>
+</Steps>
 
 ### Version the data
 
@@ -320,9 +377,9 @@ def test_blank_page_is_rejected():
 
 ## What I would improve next
 
-<Note title="Where the real gains are">
+<Callout type="tip" title="Where the real gains are">
 The architecture is rarely the bottleneck here. Data augmentation (small rotations, shifts and thickness changes with `keras.layers.RandomRotation` and friends), class weights or resampling for the rarer letters, and collecting a few hundred real phone photos as an extra test set will tell you far more about real-world performance than another convolution layer.
-</Note>
+</Callout>
 
 Beyond that, reading whole words is a natural next step: find each letter with `cv2.findContours`, sort the boxes left to right, and classify each crop. Joined-up handwriting is a different problem and needs a sequence model.
 

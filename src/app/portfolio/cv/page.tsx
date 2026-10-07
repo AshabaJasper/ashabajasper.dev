@@ -1,12 +1,29 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { ArrowUpRight, Download, Mail } from "lucide-react";
+import {
+  ArrowUpRight,
+  Award,
+  BadgeCheck,
+  BriefcaseBusiness,
+  CalendarRange,
+  Download,
+  FolderGit2,
+  GraduationCap,
+  HeartHandshake,
+  Mail,
+  MapPin,
+  UserRound,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
+import { NumbersBand, SkillGroups } from "@/components/portfolio/showcase";
+import { highlights } from "@/data/highlights";
 import { CvGantt, type GanttRow } from "@/components/portfolio/cv-gantt";
 import { CvNav, PrintButton } from "@/components/portfolio/cv-controls";
 import { EmailLink } from "@/components/portfolio/email-link";
 import { PageHeader, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
 import { Magnetic } from "@/components/shared/motion";
-import { awards, certifications, competencies, cvSummary, notableProjects, skillGroups, training } from "@/data/cv";
+import { awards, certifications, competencies, cvSummary, notableProjects, training } from "@/data/cv";
 import { communityHistory, educationHistory, experience, experienceMonths, experiencePeriod, workHistory, type ExperienceEntry } from "@/data/experience";
 import { profile } from "@/data/profile";
 import { pageMetadata } from "@/lib/seo";
@@ -22,6 +39,17 @@ export const metadata: Metadata = pageMetadata({
 
 const PDF_PATH = "/cv/ashaba-jasper-cv.pdf";
 
+const SECTION_ICON: Record<string, LucideIcon> = {
+  profile: UserRound,
+  timeline: CalendarRange,
+  experience: BriefcaseBusiness,
+  education: GraduationCap,
+  projects: FolderGit2,
+  skills: Wrench,
+  awards: Award,
+  community: HeartHandshake,
+};
+
 const SECTIONS = [
   { id: "profile", label: "Profile" },
   { id: "timeline", label: "Timeline" },
@@ -34,8 +62,14 @@ const SECTIONS = [
 ] as const;
 
 function SectionTitle({ id, index, children }: { id: string; index: number; children: React.ReactNode }) {
+  const Icon = SECTION_ICON[id];
   return (
-    <h2 id={`${id}-title`} className="font-display flex items-baseline gap-4 text-[clamp(1.7rem,3.4vw,2.4rem)] leading-none">
+    <h2 id={`${id}-title`} className="font-display flex items-center gap-4 text-[clamp(1.7rem,3.4vw,2.4rem)] leading-none">
+      {Icon ? (
+        <span aria-hidden className="bg-accent text-primary inline-flex size-10 shrink-0 items-center justify-center rounded-[11px] print:hidden">
+          <Icon className="size-5" strokeWidth={1.75} />
+        </span>
+      ) : null}
       <span className="text-primary font-mono text-[0.8rem] font-medium tracking-normal print:hidden">{String(index).padStart(2, "0")}</span>
       {children}
     </h2>
@@ -114,7 +148,10 @@ export default function CvPage() {
               {profile.email}
             </a>
           </li>
-          <li>{profile.location}</li>
+          <li className="inline-flex items-center gap-1.5">
+            <MapPin aria-hidden className="text-primary size-4" strokeWidth={1.75} />
+            {profile.location}
+          </li>
           <li>
             <a href={profile.links.linkedin} target="_blank" rel="noopener" className="link">
               linkedin.com/in/ashaba-jasper-joshua
@@ -168,6 +205,7 @@ export default function CvPage() {
                 </li>
               ))}
             </ul>
+            <NumbersBand items={highlights(now).slice(2)} className="mt-10 md:grid-cols-5 lg:grid-cols-5 print:hidden" />
           </section>
 
           <section id="timeline" aria-labelledby="timeline-title" className="scroll-mt-28 print:hidden">
@@ -241,31 +279,7 @@ export default function CvPage() {
             <SectionTitle id="skills" index={6}>
               Skills
             </SectionTitle>
-            <dl className="mt-8 grid gap-x-10 gap-y-8 md:grid-cols-2">
-              {skillGroups.map((group) => (
-                <div key={group.id} className="border-rule border-t pt-4">
-                  <dt className="flex items-center justify-between gap-3">
-                    <span className="font-semibold tracking-[-0.01em]">{group.label}</span>
-                    <span className="text-muted-foreground font-mono text-[0.72rem]">
-                      {group.items.length} <span className="sr-only">skills</span>
-                    </span>
-                  </dt>
-                  <dd className="mt-3">
-                    <ul className="flex flex-wrap gap-1.5">
-                      {group.items.map((item, i) => (
-                        <li
-                          key={item}
-                          className="chip-pop border-rule text-ink-soft hover:border-primary hover:text-foreground rounded-[8px] border px-2.5 py-1 font-mono text-[0.75rem] transition-colors"
-                          style={{ "--i": i } as React.CSSProperties}
-                        >
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <SkillGroups className="mt-8" />
           </section>
 
           <section id="awards" aria-labelledby="awards-title" className="scroll-mt-28">
@@ -274,7 +288,10 @@ export default function CvPage() {
             </SectionTitle>
             <div className="mt-8 grid gap-10 md:grid-cols-2">
               <div>
-                <h3 className="kicker">Awards and honours</h3>
+                <h3 className="kicker flex items-center gap-2">
+                  <Award aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+                  Awards and honours
+                </h3>
                 <ul className="border-rule mt-3 border-t">
                   {awards.map((a) => (
                     <li key={a.title} className="border-rule flex items-start justify-between gap-4 border-b py-4">
@@ -288,7 +305,10 @@ export default function CvPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="kicker">Licences and certifications</h3>
+                <h3 className="kicker flex items-center gap-2">
+                  <BadgeCheck aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+                  Licences and certifications
+                </h3>
                 <ul className="border-rule mt-3 border-t">
                   {certifications.map((c) => (
                     <li key={c.title} className="border-rule flex items-start justify-between gap-4 border-b py-4">

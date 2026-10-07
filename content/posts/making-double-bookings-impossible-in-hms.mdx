@@ -18,6 +18,8 @@ The first version of availability logic that most of us write looks like this: q
 
 That is a read followed by a write, and between the two there is a gap. Two requests can both run the read, both see an empty result, and both insert. The window is small, but a hotel takes bookings every day for years, and small windows get hit. Worse, the failure is silent: nothing errors, and you only find out when the second guest arrives.
 
+<RaceSequence />
+
 There are several ways to close the gap. These are the ones I weighed:
 
 | Approach | What it guarantees | What it costs |
@@ -54,6 +56,8 @@ Three details in that statement are deliberate, and each one came from thinking 
 ### The half-open range
 
 The range is built with `'[)'`, which means it includes the check-in date and excludes the check-out date. A guest who checks out on Tuesday and a guest who checks in on Tuesday do not overlap. Same-day turnover is the normal rhythm of a hotel, and a closed range would have refused it. We store `check_in` and `check_out` as plain dates rather than timestamps, so there is no confusion about which hour of the day a night belongs to.
+
+<BookingTimeline />
 
 ### The partial predicate
 
@@ -110,15 +114,42 @@ function isOverlapError(e: unknown): boolean {
 
 It is not elegant string matching. It is, however, honest about how the error arrives today.
 
+<Diagram caption="Two layers on every booking path. The friendly check explains a conflict in words the desk can act on; the constraint underneath is the guarantee." summary="A booking request first locks the room row, then runs the friendly availability check that names the room and the booking in the way, then inserts. Postgres checks the exclusion constraint on the insert, and a violation comes back as HTTP 409 instead of a 500.">
+  <Node icon="clipboard" label="Desk" title="Save a stay" detail="Create, edit, check in or move a guest" />
+  <Node icon="shield" label="Service" title="Lock the room row" detail="SELECT ... FOR UPDATE, so two desks cannot both pass" />
+  <Node icon="message" label="Service" title="Friendly check" detail="Names the room and the booking that holds the dates" />
+  <Node icon="database" label="Postgres" title="Insert" detail="The exclusion constraint runs on every write path" />
+  <Node icon="check" label="API" tone="accent" title="Saved, or a clear 409" detail="23P01 becomes HTTP 409, never a 500" />
+</Diagram>
+
 ## A reservation is not a room key
 
 The half-open range creates a subtlety that took us a while to model properly. On Tuesday, the outgoing guest's booking and the incoming guest's booking are both legal reservations for the same room. But the room is physically occupied until the first guest actually checks out, and it is not sellable until housekeeping has cleaned it.
 
-So the hold has two modes. A reservation for the future only needs the dates to be free. A check-in, or moving an in-house guest to another room, also requires that no one is currently checked in to that room, that no maintenance order is blocking it, and that there is no open housekeeping task. The error messages say which of those is in the way and name the task or the occupant. Re-rooming an in-house guest also raises a cleaning task on the room they leave, so the vacated room does not sit on the board looking clean when it is not.
+So the hold has two modes.
 
-<Note title="Try it yourself">
+<Compare caption="The same room hold, asked two different questions.">
+<CompareSide title="A reservation for the future" label="Booking" icon="clipboard">
+
+- The dates must be free for that room.
+- Back-to-back stays on the same day are fine.
+
+</CompareSide>
+<CompareSide title="A check-in, or moving an in-house guest" label="Arrival" icon="person" tone="after">
+
+- The dates must be free.
+- No one is currently checked in to the room.
+- No maintenance order is blocking it.
+- There is no open housekeeping task.
+
+</CompareSide>
+</Compare>
+
+A reservation for the future only needs the dates to be free. A check-in, or moving an in-house guest to another room, also requires that no one is currently checked in to that room, that no maintenance order is blocking it, and that there is no open housekeeping task. The error messages say which of those is in the way and name the task or the occupant. Re-rooming an in-house guest also raises a cleaning task on the room they leave, so the vacated room does not sit on the board looking clean when it is not.
+
+<Callout type="tip" title="Try it yourself">
 The public demo at https://hms.persmon.cloud gives every visitor a private sandbox copy of a demo hotel. Try booking the same room twice for overlapping nights, then try a back-to-back stay where one guest leaves the day the next arrives. The first is refused with the booking that holds the dates; the second is accepted.
-</Note>
+</Callout>
 
 ## Tenancy is enforced in the same place
 
@@ -146,9 +177,9 @@ None of this was free, and I would rather be clear about the trade-offs.
 - **Two lists must agree.** The service's list of active statuses and the constraint's predicate are the same idea written twice, in two languages. A named constant and a comment keep them aligned, but it is still a seam.
 - **Offline creates wait.** HMS has an offline outbox for the front desk, where connectivity can drop. Check-ins, check-outs and housekeeping updates can queue, because replaying them twice yields a harmless 409. Creating a booking cannot, because each create mints a new booking code. Until we add idempotency keys, new bookings need a connection.
 
-<Note title="Testing the guarantee, not the happy path">
+<Callout type="check" title="Testing the guarantee, not the happy path">
 The database tests insert two overlapping confirmed bookings on the same room and expect error 23P01, then insert two back-to-back bookings and expect both to succeed. Testing the refusal is what proves the guard exists on a freshly migrated database.
-</Note>
+</Callout>
 
 ## Lessons
 

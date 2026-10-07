@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Hash, Layers, Mail, PenLine, Tags } from "lucide-react";
 import { profile } from "@/data/profile";
 import type { PostSummary } from "@/lib/content/parse";
 import { tagPath } from "@/lib/content/feed";
@@ -13,7 +13,10 @@ export function SeriesNav({ name, parts, currentSlug }: { name: string; parts: P
   if (parts.length < 2) return null;
   return (
     <nav aria-labelledby="series-heading" className="series-box">
-      <p className="kicker">Series</p>
+      <p className="kicker inline-flex items-center gap-2">
+        <Layers aria-hidden className="size-3.5" strokeWidth={1.75} />
+        Series
+      </p>
       <h2 id="series-heading" className="mt-2 font-display text-[1.55rem] leading-tight">
         {name}
       </h2>
@@ -49,11 +52,15 @@ export function TagLinks({ tags }: { tags: string[] }) {
   if (tags.length === 0) return null;
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-      <h2 className="kicker mr-2">Filed under</h2>
+      <h2 className="kicker mr-2 inline-flex items-center gap-2">
+        <Tags aria-hidden className="size-3.5" strokeWidth={1.75} />
+        Filed under
+      </h2>
       <ul className="flex flex-wrap gap-2">
         {tags.map((tag) => (
           <li key={tag}>
             <Link href={tagPath(tag)} className="tag-chip">
+              <Hash aria-hidden className="size-3.5 opacity-60" strokeWidth={1.75} />
               {tagLabel(tag)}
             </Link>
           </li>
@@ -103,12 +110,22 @@ export function AuthorCard() {
         className="border-rule size-[72px] shrink-0 rounded-full border object-cover"
       />
       <div>
-        <p className="kicker">Written by</p>
+        <p className="kicker inline-flex items-center gap-2">
+          <PenLine aria-hidden className="size-3.5" strokeWidth={1.75} />
+          Written by
+        </p>
         <p className="mt-1 font-display text-[1.5rem] leading-tight">{profile.name}</p>
         <p className="text-ink-soft mt-2 max-w-[56ch] text-[0.98rem] leading-relaxed">{profile.heroLine}</p>
-        <Link href={crossHref("blog", "portfolio", "/about")} className="link mt-2 inline-flex min-h-11 items-center text-[0.95rem]">
-          More about me
-        </Link>
+        <p className="mt-2 flex flex-wrap gap-x-6">
+          <Link href={crossHref("blog", "portfolio", "/about")} className="link inline-flex min-h-11 items-center gap-1.5 text-[0.95rem]">
+            More about me
+            <ArrowRight aria-hidden className="size-3.5" strokeWidth={1.75} />
+          </Link>
+          <Link href={crossHref("blog", "portfolio", "/contact")} className="link inline-flex min-h-11 items-center gap-1.5 text-[0.95rem]">
+            <Mail aria-hidden className="size-3.5" strokeWidth={1.75} />
+            Get in touch
+          </Link>
+        </p>
       </div>
     </aside>
   );

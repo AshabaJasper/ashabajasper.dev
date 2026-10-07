@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowLeft, ArrowRight, BriefcaseBusiness, CalendarDays, Check, Layers, Lightbulb, Link2, Workflow, type LucideIcon } from "lucide-react";
 import { notFound } from "next/navigation";
 import { EmailLink } from "@/components/portfolio/email-link";
 import { WorkImage } from "@/components/portfolio/work-image";
@@ -7,7 +8,10 @@ import { vtImage, vtTitle } from "@/components/portfolio/work-card";
 import { Backdrop } from "@/components/shared/backdrop";
 import { Magnetic } from "@/components/shared/motion";
 import { ExternalLink, StackLine, buttonPrimary, buttonSecondary } from "@/components/portfolio/ui";
-import { featuredWork, workBySlug } from "@/data/work";
+import { Diagram } from "@/components/portfolio/diagram";
+import { KIND_ICON, sectorIcon } from "@/components/portfolio/icons";
+import { diagrams } from "@/data/diagrams";
+import { featuredWork, workBySlug, workKinds } from "@/data/work";
 import { getAllPosts } from "@/lib/content/posts";
 import { crossHref } from "@/lib/links";
 import { pageMetadata } from "@/lib/seo";
@@ -68,11 +72,14 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
     })
     .filter((link): link is { label: string; href: string; external: boolean } => link !== null);
 
-  const meta: { label: string; value: string }[] = [
-    { label: "Role", value: study.role },
-    { label: "Sector", value: item.sector },
-    ...(item.year !== null ? [{ label: "Year", value: String(item.year) }] : []),
+  const kindLabel = workKinds.find((k) => k.kind === item.kind)?.label.replace(/s$/, "") ?? item.kind;
+  const meta: { label: string; value: string; icon: LucideIcon }[] = [
+    { label: "Role", value: study.role, icon: BriefcaseBusiness },
+    { label: "Kind", value: kindLabel, icon: KIND_ICON[item.kind] },
+    { label: "Sector", value: item.sector, icon: sectorIcon(item.sector) },
+    ...(item.year !== null ? [{ label: "Year", value: String(item.year), icon: CalendarDays }] : []),
   ];
+  const diagram = diagrams[item.slug];
 
   return (
     <article>
@@ -115,7 +122,10 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
           {meta.map((m) => (
             <div key={m.label}>
               <dt className="kicker">{m.label}</dt>
-              <dd className="mt-1.5 text-[0.95rem]">{m.value}</dd>
+              <dd className="mt-1.5 inline-flex items-center gap-2 text-[0.95rem]">
+                <m.icon aria-hidden className="text-primary size-4 shrink-0" strokeWidth={1.75} />
+                {m.value}
+              </dd>
             </div>
           ))}
           <div className="col-span-2 sm:min-w-[16rem] sm:flex-1">
@@ -143,26 +153,50 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
         </div>
       </div>
 
+      {diagram ? (
+        <section aria-labelledby="how-title" className="container-page mt-16 sm:mt-24">
+          <h2 id="how-title" className="kicker mb-5 flex items-center gap-2.5">
+            <Workflow aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+            How it works
+          </h2>
+          <Diagram spec={diagram} id={`dg-${item.slug}`} />
+        </section>
+      ) : null}
+
       {/* Phones: each label sits close above its content, with the large space between sections. */}
       <div className="container-page mt-16 grid gap-y-4 sm:mt-24 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-x-16 lg:gap-y-16">
-        <h2 className="kicker lg:pt-2">Context</h2>
+        <h2 className="kicker flex items-center gap-2.5 lg:pt-2">
+          <Lightbulb aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+          Context
+        </h2>
         <p className="text-ink-soft max-w-[62ch] text-[1.12rem] leading-[1.7]">{study.context}</p>
 
-        <h2 className="kicker mt-10 lg:mt-0 lg:pt-2">{solo ? "What I built" : "What we built"}</h2>
-        <ul className="border-rule max-w-[62ch] border-t">
-          {study.built.map((line) => (
-            <li key={line} className="border-rule flex gap-4 border-b py-4 leading-relaxed">
-              <span aria-hidden className="text-primary mt-[0.15em] shrink-0 font-mono text-[0.8rem]">
-                {String(study.built.indexOf(line) + 1).padStart(2, "0")}
+        <h2 className="kicker mt-10 flex items-center gap-2.5 lg:mt-0 lg:pt-2">
+          <Layers aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+          {solo ? "What I built" : "What we built"}
+        </h2>
+        <ul className="grid max-w-[62rem] gap-3 sm:grid-cols-2">
+          {study.built.map((line, i) => (
+            <li
+              key={line}
+              data-reveal
+              style={{ "--i": i % 2 } as React.CSSProperties}
+              className="border-rule bg-card/70 flex gap-3.5 rounded-[var(--radius-lg)] border p-4 leading-relaxed"
+            >
+              <span aria-hidden className="bg-accent text-primary inline-flex size-7 shrink-0 items-center justify-center rounded-[8px]">
+                <Check className="size-4" strokeWidth={2.25} />
               </span>
-              <span>{line}</span>
+              <span className="pt-0.5">{line}</span>
             </li>
           ))}
         </ul>
 
         {links.length > 0 ? (
           <>
-            <h2 className="kicker mt-10 lg:mt-0 lg:pt-2">{item.url ? "Links" : "Read more"}</h2>
+            <h2 className="kicker mt-10 flex items-center gap-2.5 lg:mt-0 lg:pt-2">
+              <Link2 aria-hidden className="text-primary size-4" strokeWidth={1.9} />
+              {item.url ? "Links" : "Read more"}
+            </h2>
             <ul className="max-w-[62ch] space-y-1">
               {links.map((link) => (
                 <li key={link.href}>
@@ -189,13 +223,19 @@ export default async function CaseStudyPage({ params }: CaseStudyProps) {
             rel="prev"
             className="group border-rule flex flex-col gap-1.5 border-b py-7 sm:border-r sm:border-b-0 sm:pr-8"
           >
-            <span className="kicker">&larr; Previous</span>
+            <span className="kicker inline-flex items-center gap-1.5">
+              <ArrowLeft aria-hidden className="text-primary size-3.5" strokeWidth={2} />
+              Previous
+            </span>
             <span className="decoration-primary font-display text-[1.4rem] leading-tight underline-offset-[5px] group-hover:underline">
               {previous.name}
             </span>
           </Link>
           <Link href={`/work/${next.slug}`} rel="next" className="group flex flex-col gap-1.5 py-7 sm:items-end sm:pl-8 sm:text-right">
-            <span className="kicker">Next &rarr;</span>
+            <span className="kicker inline-flex items-center gap-1.5">
+              Next
+              <ArrowRight aria-hidden className="text-primary size-3.5" strokeWidth={2} />
+            </span>
             <span className="decoration-primary font-display text-[1.4rem] leading-tight underline-offset-[5px] group-hover:underline">
               {next.name}
             </span>

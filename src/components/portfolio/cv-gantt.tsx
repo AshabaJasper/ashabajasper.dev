@@ -36,8 +36,8 @@ function toIndex(value: YearMonth): number {
 /**
  * The CV as a timeline chart: one bar per role, from its first to its last
  * month, on a shared year axis. Overlaps are real (several roles ran side by
- * side). A role without a known start is drawn as an open-ended marker, not
- * a guessed bar. Each bar links to its entry below. Bars grow in once when
+ * side). An ongoing role without a start month in the CV is drawn as a
+ * "present" marker at today's line, never as a guessed bar. Each bar links to its entry below. Bars grow in once when
  * scrolled into view, unless motion is reduced.
  */
 export function CvGantt({ rows, now }: { rows: readonly GanttRow[]; now: YearMonth }) {
@@ -93,13 +93,6 @@ export function CvGantt({ rows, now }: { rows: readonly GanttRow[]; now: YearMon
             {KIND_LABEL[kind]}
           </li>
         ))}
-        <li className="inline-flex items-center gap-2">
-          <svg aria-hidden width="22" height="10" viewBox="0 0 22 10">
-            <line x1="1" y1="5" x2="16" y2="5" stroke="var(--muted-foreground)" strokeWidth="2" strokeDasharray="2 3" />
-            <circle cx="18" cy="5" r="3.5" fill="var(--muted-foreground)" />
-          </svg>
-          Start not listed
-        </li>
       </ul>
       <div ref={wrapRef} className="relative">
         <svg
@@ -164,9 +157,13 @@ export function CvGantt({ rows, now }: { rows: readonly GanttRow[]; now: YearMon
                     }}
                   />
                 ) : (
+                  // An ongoing role drawn as a "present" marker at today's line.
                   <g>
-                    <line x1={x(max) - 60} x2={x(max) - 6} y1={top + (narrow ? 13 : 17)} y2={top + (narrow ? 13 : 17)} stroke={color} strokeWidth={2} strokeDasharray="2 3" />
-                    <circle cx={x(max) - 3} cy={top + (narrow ? 13 : 17)} r={5} fill={color} />
+                    <circle cx={x(max) - 4} cy={top + (narrow ? 13 : 17)} r={9} fill={color} opacity={0.18} />
+                    <circle cx={x(max) - 4} cy={top + (narrow ? 13 : 17)} r={5} fill={color} />
+                    <text x={x(max) - 18} y={top + (narrow ? 17 : 21)} textAnchor="end" className="fill-foreground font-mono text-[11px]">
+                      Present
+                    </text>
                   </g>
                 )}
               </a>

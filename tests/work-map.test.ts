@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GROUP_BY, groupWork, layoutGroups, workStats } from "@/components/portfolio/work-map-data";
+import { GROUP_BY, STACK_FAMILIES, groupWork, layoutGroups, stackFamily, workStats } from "@/components/portfolio/work-map-data";
 import { work } from "@/data/work";
 
 describe("work map grouping", () => {
@@ -11,10 +11,10 @@ describe("work map grouping", () => {
     }
   });
 
-  it("keeps unknown years as their own visible group, last", () => {
+  it("keeps undated projects in one neutral group, last", () => {
     const groups = groupWork("year");
     const last = groups[groups.length - 1];
-    expect(last.label).toBe("Year not listed");
+    expect(last.label).toBe("Also shipped");
     expect(last.items.length).toBe(work.filter((w) => w.year === null).length);
     const years = groups.slice(0, -1).map((g) => Number(g.label));
     expect([...years].sort((a, b) => b - a)).toEqual(years);
@@ -28,6 +28,25 @@ describe("work map grouping", () => {
     const count = [...singles.values()].filter((n) => n === 1).length;
     expect(other?.label).toBe(`${count} more sectors`);
     expect(other?.items).toHaveLength(count);
+  });
+
+  it("groups by stack family, with unlisted stacks under a neutral Web group", () => {
+    const groups = groupWork("stack");
+    const web = groups.find((g) => g.key === "web");
+    expect(web?.label).toBe("Web");
+    expect(web?.items.every((w) => w.stack.length === 0)).toBe(true);
+    for (const g of groups.filter((g) => g.key !== "web")) {
+      const family = STACK_FAMILIES.find((f) => f.key === g.key)!;
+      for (const item of g.items) expect(item.stack.some((t) => family.techs.includes(t)), item.slug).toBe(true);
+    }
+    expect(stackFamily({ stack: ["Flutter", "Firebase"] })).toBe("mobile");
+    expect(stackFamily({ stack: ["Next.js", "React"] })).toBe("react");
+  });
+
+  it("never labels a group with an apology", () => {
+    for (const { value } of GROUP_BY) {
+      for (const g of groupWork(value)) expect(`${g.label} ${g.note ?? ""}`).not.toMatch(/not listed|unknown|missing/i);
+    }
   });
 
   it("puts case studies first inside a group", () => {

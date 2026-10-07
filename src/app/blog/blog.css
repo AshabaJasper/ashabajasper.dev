@@ -4,7 +4,14 @@
  * and dark follow the .dark class without duplicated rules.
  */
 
-/* Post layout: one column, then article plus a sticky rail from 1024px. */
+/*
+ * Post layout. One column on phones and tablets. From 1024px the header spans
+ * the full width, the article takes every pixel left of a narrow sticky rail,
+ * and inside the article running text keeps the 68ch measure while figures,
+ * code and tables use the full column ("wide"). Earlier the article column
+ * was capped at 43rem beside a 15rem rail with a large gap, so text stopped
+ * well short of the space the page had, and the title wrapped into four lines.
+ */
 .post-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -16,22 +23,43 @@
 
 @media (min-width: 1024px) {
   .post-grid {
-    grid-template-columns: minmax(0, 43rem) minmax(0, 15rem);
+    grid-template-columns: minmax(0, 1fr) 13.5rem;
     grid-template-areas:
-      "header ."
+      "header header"
       "main rail";
-    column-gap: clamp(3rem, 7vw, 6.5rem);
+    column-gap: clamp(2.5rem, 4.5vw, 4.5rem);
   }
   .post-header {
     grid-area: header;
   }
   .post-main {
     grid-area: main;
+    min-width: 0;
   }
   .post-rail {
     display: block;
     grid-area: rail;
   }
+}
+
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.4rem;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.meta-item svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  opacity: 0.8;
 }
 
 /* Article prose, built on @tailwindcss/typography with the site tokens. */
@@ -53,7 +81,7 @@
   --tw-prose-pre-bg: var(--code-bg);
   --tw-prose-th-borders: var(--rule);
   --tw-prose-td-borders: var(--rule);
-  max-width: 68ch;
+  max-width: none;
   margin-top: 3rem;
   font-size: 1.0625rem;
   line-height: 1.7;
@@ -63,6 +91,21 @@
   .prose-blog {
     font-size: 1.125rem;
   }
+}
+
+/* The reading measure lives on each block, so wide figures can use the whole column. */
+.prose.prose-blog {
+  max-width: none;
+}
+
+.prose-blog > * {
+  max-width: 68ch;
+}
+
+.prose-blog > .wide,
+.prose-blog > .code-figure,
+.prose-blog > .table-scroll {
+  max-width: none;
 }
 
 .prose-blog > :first-child {
@@ -97,9 +140,15 @@
   margin-top: 1.8em;
 }
 
+/*
+ * No text-wrap: pretty on running text. Chrome's pretty wrapping pulls words
+ * down to even out the last lines, which left visibly short lines ending
+ * mid-sentence ("Both / press save.") all through the posts. Greedy wrapping
+ * fills each line to the measure.
+ */
 .prose-blog p,
 .prose-blog li {
-  text-wrap: pretty;
+  text-wrap: wrap;
 }
 
 .prose-blog a {
@@ -386,37 +435,6 @@
   color: var(--muted-foreground);
 }
 
-/* <Note> callout: an accent tint, no coloured stripe. */
-.post-note {
-  margin: 1.9em 0;
-  padding: 1.1em 1.3em;
-  background: var(--accent);
-  color: var(--foreground);
-  border-radius: 12px;
-}
-
-.post-note-title {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-foreground);
-  margin: 0 0 0.4em;
-}
-
-.post-note-body > :first-child {
-  margin-top: 0;
-}
-
-.post-note-body > :last-child {
-  margin-bottom: 0;
-}
-
-.prose-blog .post-note a {
-  color: var(--accent-foreground);
-}
-
 /* Table of contents. */
 /* The rail scrolls on its own when the list is taller than the screen. The left
    padding (offset by a negative margin) keeps the active dot inside the scroll box. */
@@ -548,6 +566,7 @@
 }
 
 .post-row-date {
+  align-self: start;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 0.8rem;
   color: var(--muted-foreground);
@@ -618,6 +637,7 @@
 .tag-chip {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
   min-height: 2.75rem;
   padding: 0 1rem;
   border: 1px solid var(--rule);
@@ -768,4 +788,1155 @@
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Post figures: callouts, flow diagrams, steps, stats, compare, cards and   */
+/* the hand-drawn SVG diagrams. Motion is attached only with scroll-driven   */
+/* animation support and no reduced-motion preference; otherwise static.    */
+/* ------------------------------------------------------------------------ */
+
+.figure {
+  margin: 2.6em 0;
+}
+
+.figure-caption {
+  margin-top: 0.9rem;
+  max-width: 68ch;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.dg-line {
+  fill: none;
+  stroke: var(--muted-foreground);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* SVG text */
+.dg-text {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  fill: var(--foreground);
+}
+
+.dg-strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dg-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  fill: var(--ink-soft);
+}
+
+.dg-muted {
+  fill: var(--muted-foreground);
+}
+
+.dg-accent-text {
+  fill: var(--link);
+}
+
+/* Callout */
+.callout {
+  display: flex;
+  gap: 0.95rem;
+  margin: 2em 0;
+  padding: 1.05em 1.25em;
+  background: var(--accent);
+  color: var(--foreground);
+  border-radius: 14px;
+}
+
+.callout-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-top: 0.05rem;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--card) 75%, transparent);
+  color: var(--accent-foreground);
+}
+
+.callout-content {
+  min-width: 0;
+}
+
+.prose-blog .callout-title {
+  margin: 0.4rem 0 0.4em;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--accent-foreground);
+}
+
+.callout-body {
+  font-size: 0.97em;
+}
+
+.callout-body > :first-child {
+  margin-top: 0;
+}
+
+.callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+.prose-blog .callout a {
+  color: var(--accent-foreground);
+}
+
+.callout-warning {
+  background: color-mix(in srgb, var(--viz-ecommerce) 11%, var(--card));
+}
+
+.callout-warning .callout-icon {
+  color: color-mix(in srgb, var(--viz-ecommerce) 70%, var(--foreground));
+}
+
+.prose-blog .callout-warning .callout-title {
+  color: var(--foreground);
+}
+
+/* Diagram: a flow of nodes */
+.flow {
+  container-type: inline-size;
+}
+
+.flow-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Narrow: a compact row, icon on the left. Wide (container query below): a column card. */
+.flow-node {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 0.85rem;
+  row-gap: 0.2rem;
+  margin: 0;
+  padding: 0.85rem 1rem 0.95rem;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+}
+
+.flow-node-head {
+  display: contents;
+}
+
+.flow-node-icon {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+}
+
+.flow-node-index {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.flow-node-label,
+.flow-node-title,
+.flow-node-detail {
+  grid-column: 2;
+}
+
+.flow-node-icon,
+.card-icon,
+.compare-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.flow-node-index,
+.card-index {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.flow-node-label {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.flow-node-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.flow-node-detail {
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
+
+.flow-node-accent {
+  background: color-mix(in srgb, var(--accent) 55%, var(--card));
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--rule));
+}
+
+.flow-node-muted {
+  background: transparent;
+  border-style: dashed;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+}
+
+.flow-arrow-h {
+  display: none;
+  width: 2rem;
+  height: 1.25rem;
+}
+
+.flow-arrow-v {
+  width: 1.25rem;
+  height: 1.6rem;
+}
+
+@container (min-width: 640px) {
+  .flow-list {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .flow-node {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.95rem 1rem 1.05rem;
+  }
+  .flow-node-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+  }
+  .flow-arrow {
+    flex: none;
+    width: 1.9rem;
+  }
+  .flow-arrow-h {
+    display: block;
+  }
+  .flow-arrow-v {
+    display: none;
+  }
+}
+
+/* Steps: a vertical timeline */
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prose-blog .steps > .step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  column-gap: 1rem;
+  margin: 0;
+  padding: 0 0 1.6rem;
+}
+
+.prose-blog .steps > .step:last-child {
+  padding-bottom: 0;
+}
+
+/* The rail between markers. */
+.step::before {
+  content: "";
+  position: absolute;
+  left: calc(1.2rem - 0.5px);
+  top: 2.6rem;
+  bottom: 0.2rem;
+  width: 1px;
+  background: var(--rule);
+  transform-origin: top;
+}
+
+.step:last-child::before {
+  display: none;
+}
+
+.step-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--link);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.prose-blog .step-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0.45rem 0 0.25rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.step-number {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.step-body {
+  font-size: 0.97em;
+}
+
+.step-body > :first-child {
+  margin-top: 0;
+}
+
+.step-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1.15rem 1.25rem 1.25rem;
+  /* Inner dividers: every tile draws a top and left rule; the frame clips the outer ones. */
+  box-shadow: -1px -1px 0 0 var(--rule);
+}
+
+.prose-blog .stat-value {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-unit {
+  margin-left: 0.25rem;
+  font-size: 0.45em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--muted-foreground);
+}
+
+.prose-blog .stat-label {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+/* Compare */
+.compare {
+  display: grid;
+  gap: 0.9rem;
+}
+
+@media (min-width: 640px) {
+  .compare {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.compare-side {
+  min-width: 0;
+  padding: 1.1rem 1.25rem 0.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.compare-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.prose-blog .compare-label {
+  margin: 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.prose-blog .compare-title {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--foreground);
+}
+
+.compare-before .compare-icon {
+  background: color-mix(in srgb, var(--destructive) 12%, var(--card));
+  color: var(--destructive);
+}
+
+.compare-after {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--rule));
+}
+
+.compare-body {
+  font-size: 0.95em;
+}
+
+.prose-blog .compare-body ul {
+  padding-left: 1.1em;
+}
+
+.prose-blog .compare-body li {
+  margin: 0.45em 0;
+}
+
+/* Cards */
+.cards {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 560px) {
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Phones: each card is a compact row, icon on the left; the whole card is the link. */
+@media (max-width: 559px) {
+  .cards .card {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 0.85rem;
+    row-gap: 0.2rem;
+    padding: 0.85rem 1rem 0.95rem;
+  }
+  .cards .card-top {
+    display: contents;
+  }
+  .cards .card-icon {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .cards .card-index {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .cards .card-title,
+  .cards .card-body {
+    grid-column: 2;
+  }
+  .cards .card-more {
+    display: none;
+  }
+}
+
+@media (min-width: 1280px) {
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card-item {
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.05rem 1.1rem 1.15rem;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: var(--card);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease, transform 200ms ease;
+}
+
+.prose-blog a.card {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-link:hover {
+  border-color: var(--ink-soft);
+  transform: translateY(-2px);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
+}
+
+.card-body {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.card-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--link);
+}
+
+.card-more svg {
+  transition: transform 200ms ease;
+}
+
+.card-link:hover .card-more svg {
+  transform: translateX(3px);
+}
+
+/* Hand-drawn SVG figures: a framed canvas, wide or narrow layout by container width. */
+.svg-figure-canvas {
+  container-type: inline-size;
+  padding: clamp(1rem, 3vw, 1.75rem);
+  border: 1px solid var(--rule);
+  border-radius: 18px;
+  background-color: var(--card);
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.svg-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.svg-figure .svg-wide {
+  display: none;
+}
+
+.svg-figure .svg-narrow {
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+@container (min-width: 620px) {
+  .svg-figure .svg-wide {
+    display: block;
+  }
+  .svg-figure .svg-narrow {
+    display: none;
+  }
+}
+
+/* The layer stack needs more room before the wide layout stays legible. */
+@container (min-width: 620px) and (max-width: 739px) {
+  .svg-figure-cnn .svg-wide {
+    display: none;
+  }
+  .svg-figure-cnn .svg-narrow {
+    display: block;
+  }
+}
+
+/* Timeline */
+.tl-col {
+  fill: transparent;
+}
+
+.tl-col-alt {
+  fill: color-mix(in srgb, var(--foreground) 3.5%, transparent);
+}
+
+.tl-turnover {
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.tl-bar {
+  stroke-width: 1.5;
+}
+
+.tl-bar-held {
+  fill: color-mix(in srgb, var(--foreground) 8%, var(--card));
+  stroke: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.tl-bar-refused {
+  fill: color-mix(in srgb, var(--destructive) 6%, var(--card));
+  stroke: var(--destructive);
+  stroke-dasharray: 5 4;
+}
+
+.tl-bar-accepted {
+  fill: color-mix(in srgb, var(--primary) 16%, var(--card));
+  stroke: var(--primary);
+}
+
+.tl-hatch-bg {
+  fill: color-mix(in srgb, var(--destructive) 12%, var(--card));
+}
+
+.tl-hatch-line {
+  stroke: var(--destructive);
+  stroke-width: 2;
+  opacity: 0.5;
+}
+
+.tl-edge-held {
+  fill: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.tl-edge-refused {
+  fill: var(--destructive);
+}
+
+.tl-edge-accepted {
+  fill: var(--primary);
+}
+
+.tl-open {
+  fill: var(--card);
+  stroke-width: 2;
+}
+
+.tl-open-held {
+  stroke: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.tl-open-refused {
+  stroke: var(--destructive);
+}
+
+.tl-open-accepted {
+  stroke: var(--primary);
+}
+
+/* A halo in the canvas colour keeps notes legible where they cross a grid line. */
+.tl-note,
+.seq-label,
+.seq-gap-text {
+  paint-order: stroke;
+  stroke: var(--card);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.tl-note-held {
+  fill: var(--muted-foreground);
+}
+
+.tl-note-refused {
+  fill: var(--destructive);
+}
+
+.tl-note-accepted {
+  fill: var(--link);
+}
+
+/* Sequence diagrams */
+.seq-grid {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.seq-grid svg {
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+@container (min-width: 700px) {
+  .seq-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem;
+  }
+}
+
+.seq-lane {
+  fill: var(--background);
+  stroke: var(--rule);
+}
+
+.seq-life {
+  stroke: color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+  stroke-dasharray: 3 4;
+}
+
+.seq-msg {
+  fill: none;
+  stroke: var(--ink-soft);
+  stroke-width: 1.5;
+}
+
+.seq-reply {
+  stroke: var(--muted-foreground);
+}
+
+.seq-bad {
+  stroke: var(--destructive);
+}
+
+.seq-head {
+  fill: var(--ink-soft);
+}
+
+.seq-head-bad {
+  fill: var(--destructive);
+}
+
+.seq-label {
+  font-size: 11.5px;
+}
+
+.seq-bad-text {
+  fill: var(--destructive);
+}
+
+.seq-gap {
+  fill: color-mix(in srgb, var(--destructive) 7%, transparent);
+  stroke: color-mix(in srgb, var(--destructive) 30%, transparent);
+  stroke-dasharray: 3 3;
+}
+
+.seq-gap-text {
+  font-size: 11px;
+  fill: var(--destructive);
+}
+
+.seq-note {
+  fill: var(--accent);
+}
+
+.seq-result {
+  stroke-width: 1;
+}
+
+.seq-result-bad {
+  fill: color-mix(in srgb, var(--destructive) 10%, var(--card));
+  stroke: color-mix(in srgb, var(--destructive) 45%, transparent);
+}
+
+.seq-result-good {
+  fill: var(--accent);
+  stroke: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+.seq-result-text-bad {
+  fill: var(--destructive);
+}
+
+.seq-result-text-good {
+  fill: var(--accent-foreground);
+}
+
+/* CNN layer stack */
+.cnn-input,
+.cnn-flatten {
+  --tone: var(--viz-website);
+}
+
+.cnn-conv {
+  --tone: var(--viz-mobile);
+}
+
+.cnn-pool {
+  --tone: var(--viz-system);
+}
+
+.cnn-dense {
+  --tone: var(--viz-ecommerce);
+}
+
+.cnn-out {
+  --tone: var(--primary);
+}
+
+.cnn-face,
+.cnn-top,
+.cnn-side {
+  stroke: var(--tone);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+
+.cnn-face {
+  fill: color-mix(in srgb, var(--tone) 20%, var(--card));
+}
+
+.cnn-top {
+  fill: color-mix(in srgb, var(--tone) 34%, var(--card));
+}
+
+.cnn-side {
+  fill: color-mix(in srgb, var(--tone) 46%, var(--card));
+}
+
+.cnn-flow,
+.cnn-bracket {
+  fill: none;
+  stroke: var(--muted-foreground);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cnn-chip {
+  fill: var(--background);
+  stroke: var(--rule);
+}
+
+.svg-figure-cnn .svg-wide .cnn-name {
+  font-size: 15px;
+}
+
+.svg-figure-cnn .svg-wide .dg-mono {
+  font-size: 13.5px;
+}
+
+/* Motion: figures draw themselves as they scroll into view. */
+@keyframes dg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dg-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dg-grow {
+  from {
+    opacity: 0.2;
+    transform: scaleX(0.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dg-rail {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .dg {
+      view-timeline: --dg block;
+    }
+    .dg .dg-draw,
+    .dg .dg-fade,
+    .dg .dg-pop,
+    .dg .dg-grow,
+    .dg .flow-node,
+    .dg .stat,
+    .dg .card-item,
+    .dg .step,
+    .dg .step::before {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --dg;
+      animation-range: cover calc(6% + var(--i, 0) * 2.5%) cover calc(26% + var(--i, 0) * 2.5%);
+    }
+    .dg .dg-draw {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation-name: dg-draw;
+    }
+    .dg .dg-fade {
+      animation-name: dg-fade;
+    }
+    .dg .dg-pop {
+      animation-name: dg-pop;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .dg .dg-grow {
+      animation-name: dg-grow;
+      transform-box: fill-box;
+      transform-origin: left center;
+    }
+    .dg .flow-node,
+    .dg .stat,
+    .dg .card-item,
+    .dg .step {
+      animation-name: dg-rise;
+    }
+    .dg .step::before {
+      animation-name: dg-rail;
+    }
+  }
+}
+
+/* Blog index: header facts, featured post and rows. */
+.blog-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (min-width: 640px) {
+  .blog-facts {
+    grid-template-columns: repeat(3, max-content);
+  }
+}
+
+.blog-fact {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: 1rem 1.5rem 1.1rem 0;
+}
+
+@media (max-width: 420px) {
+  .blog-fact dt {
+    white-space: normal;
+  }
+}
+
+.blog-fact + .blog-fact {
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--rule);
+}
+
+.blog-fact dd {
+  font-size: clamp(1.7rem, 3vw, 2.3rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.blog-fact dt {
+  display: inline-flex;
+  white-space: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.74rem;
+  color: var(--muted-foreground);
+}
+
+.featured-post {
+  position: relative;
+  display: grid;
+  gap: 2rem;
+  padding: clamp(1.4rem, 4vw, 2.75rem);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  background-color: var(--card);
+  background-image:
+    radial-gradient(ellipse 60% 70% at 0% 0%, var(--glow), transparent 70%),
+    radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    18px 18px;
+  transition: border-color 150ms ease;
+}
+
+.featured-post:hover {
+  border-color: var(--ink-soft);
+}
+
+@media (min-width: 1024px) {
+  .featured-post {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: 3.5rem;
+  }
+}
+
+.featured-inside {
+  border-top: 1px solid var(--rule);
+}
+
+@media (min-width: 1024px) {
+  .featured-inside {
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+    padding-left: 2.25rem;
+  }
+}
+
+.featured-inside li {
+  display: grid;
+  grid-template-columns: 1.9rem minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  font-size: 0.93rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.featured-inside li + li {
+  border-top: 1px dashed var(--rule);
+}
+
+.read-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--link);
+}
+
+.read-more svg {
+  transition: transform 200ms ease;
+}
+
+.group:hover .read-more svg,
+.read-more:hover svg {
+  transform: translateX(3px);
+}
+
+.row-arrow {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .row-arrow {
+    display: inline-flex;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--muted-foreground);
+    transition: color 150ms ease, border-color 150ms ease, transform 200ms ease;
+  }
+  .group:hover .row-arrow {
+    color: var(--link);
+    border-color: var(--link);
+    transform: translateX(3px);
+  }
+}
+
+.row-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.row-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
 }

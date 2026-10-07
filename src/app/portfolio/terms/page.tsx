@@ -34,7 +34,7 @@ export default function TermsPage() {
           <h2>Copyright</h2>
           <p>
             Unless a page says otherwise, the text, images and design of this site are copyright {profile.fullName}.
-            Project names, logos and screenshots belong to their owners and appear here to describe work I was part of.
+            Project names, logos and screenshots belong to the organisations they represent and appear here to describe work I was part of. Technology logos are drawn from Simple Icons and remain the trademarks of their respective holders; they only show which tools a project uses.
           </p>
 
           <h2>Code in blog posts</h2>

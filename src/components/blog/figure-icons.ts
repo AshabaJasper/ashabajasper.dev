@@ -1,0 +1,83 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  Banknote,
+  BookOpen,
+  Brain,
+  Camera,
+  ChartLine,
+  CircleCheck,
+  CircleX,
+  ClipboardList,
+  Contrast,
+  Crop,
+  Database,
+  FileText,
+  FlaskConical,
+  Images,
+  Inbox,
+  Info,
+  Layers,
+  Lightbulb,
+  Mail,
+  MessageCircle,
+  Receipt,
+  ScanLine,
+  Send,
+  Server,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Sigma,
+  Smartphone,
+  Store,
+  TestTube,
+  TriangleAlert,
+  UserRound,
+  Wrench,
+} from "lucide-react";
+
+/**
+ * Icons a post may name by string in an MDX figure (posts cannot pass
+ * components, JS expressions are blocked). Unknown names render no icon.
+ */
+export const FIGURE_ICONS: Readonly<Record<string, LucideIcon>> = {
+  banknote: Banknote,
+  book: BookOpen,
+  brain: Brain,
+  camera: Camera,
+  chart: ChartLine,
+  check: CircleCheck,
+  cross: CircleX,
+  clipboard: ClipboardList,
+  contrast: Contrast,
+  crop: Crop,
+  database: Database,
+  file: FileText,
+  flask: FlaskConical,
+  images: Images,
+  inbox: Inbox,
+  info: Info,
+  layers: Layers,
+  lightbulb: Lightbulb,
+  mail: Mail,
+  message: MessageCircle,
+  receipt: Receipt,
+  scan: ScanLine,
+  send: Send,
+  server: Server,
+  shield: ShieldCheck,
+  bag: ShoppingBag,
+  cart: ShoppingCart,
+  sigma: Sigma,
+  phone: Smartphone,
+  store: Store,
+  test: TestTube,
+  warning: TriangleAlert,
+  person: UserRound,
+  wrench: Wrench,
+};
+
+export function figureIcon(name: string | undefined): LucideIcon | null {
+  if (!name) return null;
+  return FIGURE_ICONS[name] ?? null;
+}

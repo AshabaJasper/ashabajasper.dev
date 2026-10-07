@@ -109,7 +109,7 @@ export function projectHref(item: Pick<WorkItem, "slug" | "featured">): string {
   return item.featured ? `/work/${item.slug}` : `/work#${item.slug}`;
 }
 
-/** Technologies with how many projects list each, most used first. Projects without a stack are not counted. */
+/** Technologies with how many projects use each, most used first. */
 export function stackCounts(items: readonly WorkItem[] = work): { tech: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const item of items) for (const tech of new Set(item.stack)) counts.set(tech, (counts.get(tech) ?? 0) + 1);
@@ -246,13 +246,13 @@ function project(slug: string | undefined): TermLine[] {
   }
   const rows: TermLine[] = [
     line(t(item.name, "strong")),
-    line(t(`${kindLabel(item.kind)} · ${item.sector} · ${item.year ?? "year not listed"}`, "muted")),
+    line(t([kindLabel(item.kind), item.sector, ...(item.year === null ? [] : [String(item.year)])].join(" · "), "muted")),
     blank,
     line(item.caseStudy?.headline ?? item.summary),
   ];
   if (item.caseStudy) rows.push(line(t(item.summary, "muted")));
   rows.push(blank);
-  rows.push(line(t("stack  ", "muted"), item.stack.length ? item.stack.join(", ") : t("not listed", "muted")));
+  if (item.stack.length) rows.push(line(t("stack  ", "muted"), item.stack.join(", ")));
   if (item.url) rows.push(line(t("live   ", "muted"), t(item.url.replace(/^https:\/\//, ""), "info", item.url)));
   rows.push(
     item.featured
@@ -266,17 +266,15 @@ function stack(): TermLine[] {
   const counts = stackCounts();
   const top = counts.slice(0, 10);
   const max = top[0]?.count ?? 1;
-  const withStack = work.filter((w) => w.stack.length > 0).length;
   const width = Math.max(...top.map((c) => c.tech.length)) + 2;
   return [
-    line(t("Technologies named in the project listings", "strong")),
-    line(t(`${withStack} of ${work.length} projects list a stack; the other ${work.length - withStack} are not counted.`, "muted")),
+    line(t("Most used across the projects", "strong"), t(`  ${work.length} projects shipped`, "muted")),
     blank,
     ...top.map((c) =>
       line(t(c.tech.padEnd(width)), t("█".repeat(Math.max(1, Math.round((c.count / max) * 18))), "accent"), t(` ${c.count}`, "info")),
     ),
     blank,
-    line(t(`${counts.length} technologies in all. Learning now: `, "muted"), profile.exploring.join(", ")),
+    line(t(`${counts.length} technologies across the portfolio. Going deeper into: `, "muted"), profile.exploring.join(", ")),
   ];
 }
 

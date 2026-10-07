@@ -31,8 +31,8 @@ export default function PrivacyPage() {
         <Prose>
           <h2>Who runs this site</h2>
           <p>
-            This notice covers ashabajasper.dev and blog.ashabajasper.dev. Both are personal websites run by{" "}
-            {profile.fullName} in Kampala, Uganda. For anything about your data, email{" "}
+            This notice covers ashabajasper.dev and blog.ashabajasper.dev. Both are personal websites run by me,{" "}
+            {profile.fullName}, in Kampala, Uganda. For anything about your data, email{" "}
             <a href={`mailto:${profile.email}`} className="link">
               {profile.email}
             </a>
@@ -82,12 +82,12 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Hostinger Mail</strong>, when notifications are enabled, carries two things: a short notice to
-              the site owner that a message or comment has arrived, with the sender&apos;s name but never the message,
+              me that a message or comment has arrived, with the sender&apos;s name but never the message,
               and any reply sent from the site&apos;s admin. Replies sent from a personal mailbox go through that
               mailbox&apos;s provider as usual.
             </li>
             <li>
-              <strong>Telegram</strong>, when it is set up, carries the same short notice to the site owner. It contains
+              <strong>Telegram</strong>, when it is set up, carries the same short notice to me. It contains
               the sender&apos;s name, never the message.
             </li>
           </ul>
@@ -95,15 +95,15 @@ export default function PrivacyPage() {
           <h2>How long it is kept</h2>
           <ul>
             <li>
-              Contact messages and comments: until the site owner deletes them. Published comments stay visible with
+              Contact messages and comments: until I delete them. Published comments stay visible with
               their post.
             </li>
             <li>The IP hash: eligible for automatic cleanup after 30 days, as described above.</li>
             <li>Database backups: about two weeks. Deleted data may remain in a backup until it expires.</li>
-            <li>Analytics: retained until the site owner clears it; no automatic retention period is configured.</li>
+            <li>Analytics: retained until I clear it; no automatic retention period is configured.</li>
             <li>
               A log of admin actions, such as a message being marked as read. It records the action and the time, not
-              your name, email or message, and is kept until the site owner deletes it.
+              your name, email or message, and is kept until I delete it.
             </li>
           </ul>
 

@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/shared/site-header";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { CommandCenter } from "@/components/shared/command-center";
 import { ViewTransitions } from "@/components/shared/view-transitions";
+import { ScrollFx } from "@/components/shared/scroll-fx";
 import { getAllPosts } from "@/lib/content/posts";
 import { Umami } from "@/components/analytics/umami";
 import { StickyCta } from "@/components/portfolio/sticky-cta";
@@ -31,6 +32,7 @@ export default async function PortfolioLayout({ children }: { children: React.Re
       <SiteHeader site="portfolio" homeHref="/" navItems={PRIMARY_NAV.map((item) => ({
         ...item, href: crossHref("portfolio", item.site, item.path),
       }))} />
+      <ScrollFx />
       <main id="main" tabIndex={-1} className="outline-none">
         {children}
       </main>

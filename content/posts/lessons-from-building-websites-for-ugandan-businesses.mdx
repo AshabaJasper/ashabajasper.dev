@@ -10,11 +10,28 @@ The projects page at Persmon Technologies currently lists 47 pieces of work. Mos
 
 After that many builds, the same handful of decisions keeps coming back. None of them are about frameworks. They are about how people here actually buy, book and ask questions, and about what happens to a site after we hand it over. These are the six lessons I would give anyone starting this kind of work, each one taken from code we shipped.
 
+<Cards caption="The six lessons at a glance. Each card jumps to its section.">
+  <Card icon="message" title="WhatsApp is the checkout" href="#1-whatsapp-is-the-checkout-not-a-contact-link">The cart ends in a ready-to-send chat, not a payment gateway.</Card>
+  <Card icon="clipboard" title="Booking requests, not payments" href="#2-ask-for-a-booking-request-not-a-payment">Guests say which dates and room; staff confirm.</Card>
+  <Card icon="banknote" title="Prices in UGX, like a person" href="#3-show-prices-in-ugx-and-show-them-like-a-person-would">Separators, round hundreds, and prices shown at all.</Card>
+  <Card icon="images" title="Images are the page weight" href="#4-images-are-the-page-weight-so-treat-them-as-an-engineering-problem">Resize and convert at build time and at upload time.</Card>
+  <Card icon="mail" title="Forms live or die by email" href="#5-a-form-is-only-as-good-as-the-email-it-sends">Reference numbers, honeypots, real email delivery.</Card>
+  <Card icon="wrench" title="Hand over something editable" href="#6-hand-over-something-the-owner-can-actually-change">Business facts in one file, or an admin sized to the staff.</Card>
+</Cards>
+
 ## 1. WhatsApp is the checkout, not a contact link
 
 The first version of most small business sites has a WhatsApp icon in the footer. That is fine, but it wastes the channel. Customers here already talk to businesses on WhatsApp, and owners already answer there, often from the same phone they use for everything else. So for shops we stopped treating WhatsApp as "contact us" and started treating it as the end of the buying flow.
 
 On Berry Store, a Kampala eyewear boutique, the cart never talks to a payment gateway. When the customer taps checkout, the site composes a WhatsApp message listing each frame, the quantity, the line price in UGX, the total, and an optional name and note, then opens WhatsApp with that text ready to send. Each product page has its own button that opens a chat already asking whether that specific frame is available. The Aknog Travel Services booking page does the same with a detailed form: the visitor fills in the trip, the site validates it, and the finished enquiry opens in WhatsApp.
+
+<Diagram caption="The ordering path on Berry Store. The site does the writing; a person does the confirming." summary="A customer picks products into a cart and taps checkout. Instead of a payment gateway, the site composes a WhatsApp message with each item, the quantity, the line price in UGX, the total and an optional name and note, then opens WhatsApp with that text ready to send. The order is confirmed when the owner replies.">
+  <Node icon="bag" label="Shop" title="Pick frames" detail="Product pages and a cart, prices in UGX" />
+  <Node icon="cart" label="Cart" title="Tap checkout" detail="No payment gateway in the way" />
+  <Node icon="file" label="Site" title="Compose the order" detail="Items, quantities, line prices, total, name and note" />
+  <Node icon="message" label="WhatsApp" title="Chat opens, text ready" detail="The customer only has to press send" />
+  <Node icon="person" label="Owner" tone="accent" title="A person confirms" detail="The order stands once the owner replies" />
+</Diagram>
 
 The core is small:
 
@@ -103,13 +120,21 @@ async function toWebp(input, maxWidth) {
 }
 ```
 
+<Stats caption="The image sizes these sites ship, from the Veganic build script and the Bakerm media library.">
+  <Stat value="800" unit="px" label="Widest product card image" />
+  <Stat value="1280" unit="px" label="Widest hero and section image" />
+  <Stat value="82" label="WebP quality at build time" />
+  <Stat value="1920" unit="px" label="Widest image after an owner upload" />
+  <Stat value="480" unit="px" label="Thumbnail made on every upload" />
+</Stats>
+
 At upload time matters even more, because after handover the owner uploads the photos. Bakerm Hotel's media library resizes every uploaded image to at most 1920 pixels wide, makes a 480 pixel thumbnail, corrects the orientation, and stores alt text alongside the file. The owner never has to know any of this happened.
 
 In the markup, images below the fold get `loading="lazy"` and explicit `width` and `height`, so the layout does not jump while they load. The main image at the top of the page is the exception: lazy loading it only delays the one picture every visitor sees.
 
-<Note title="Check on a real phone">
+<Callout type="tip" title="Check on a real phone">
 Desktop developer tools are a good start, but a mid-range Android phone on mobile data shows problems that a laptop on office Wi-Fi hides. It is worth opening every site on one before handover.
-</Note>
+</Callout>
 
 ## 5. A form is only as good as the email it sends
 
@@ -148,9 +173,9 @@ For larger sites the answer is a proper admin, sized to the staff. Bakerm Hotel 
 
 Hosting choices follow the same thinking. Many of our sites are plain HTML, CSS and JavaScript with no build step, which runs on ordinary shared hosting and is easy for the next developer to understand. We add PHP and MySQL only where something must be stored, and Bakerm's public pages still render from fallback data if the database is unreachable.
 
-<Note title="Write the handover down">
+<Callout type="note" title="Write the handover down">
 Our project folders carry a README with the pages, how to run it locally and what is deliberately out of scope. Bakerm's lists payments, a live booking engine and guest accounts as later work, so nobody mistakes a missing feature for a bug.
-</Note>
+</Callout>
 
 ## What ties these together
 

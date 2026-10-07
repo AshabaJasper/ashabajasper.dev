@@ -456,6 +456,273 @@ html[data-term-intro="play"] .term-screen:not([data-live]) {
   }
 }
 
+/*
+ * Portfolio scroll effects (scroll-fx.tsx). Two paths, one look:
+ * - `html.sda`: the browser has scroll-driven animations, so CSS ties every
+ *   effect to the scroll position directly.
+ * - `html.fx:not(.sda)`: an IntersectionObserver adds `.in-view` and a
+ *   passive scroll listener drives the bar, parallax and pinned cards.
+ * Neither class is set under reduced motion, so nothing hides or moves, and
+ * without JavaScript everything is simply shown.
+ */
+@keyframes progress-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes parallax-shift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, calc(var(--speed, 0.15) * 100vh), 0);
+  }
+}
+@keyframes stack-recede {
+  from {
+    transform: none;
+    filter: none;
+  }
+  to {
+    transform: scale(0.92) translateY(-14px);
+    filter: brightness(0.82) saturate(0.85);
+  }
+}
+@keyframes dg-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes dg-node-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes confetti-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx, 0px), 70vh, 0) rotate(var(--rot, 540deg));
+    opacity: 0;
+  }
+}
+
+.scroll-progress-track {
+  display: none;
+}
+html.fx .scroll-progress-track {
+  display: block;
+}
+
+@keyframes colon-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+.clock-colon {
+  animation: colon-blink 2s ease-in-out infinite;
+}
+
+/* Work map tiles fly to their new group once the real width is known. */
+.work-map {
+  transition: height 600ms cubic-bezier(0.2, 0.75, 0.15, 1);
+}
+.work-map.is-measured .map-mark {
+  transition: transform 750ms cubic-bezier(0.2, 0.75, 0.15, 1);
+}
+.map-mark-inner {
+  transition:
+    opacity 250ms ease,
+    transform 200ms ease;
+}
+.map-label {
+  animation: fade-up 500ms cubic-bezier(0.2, 0.75, 0.15, 1) both;
+  animation-delay: calc(var(--i, 0) * 60ms);
+}
+.map-tip {
+  animation: fade-up 160ms ease-out both;
+}
+
+/* The "Tech I use" marquee: two copies of the list, one moving strip. */
+.marquee-track {
+  animation: marquee 60s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Diagrams name their own view timeline, so edges and nodes draw as the figure scrolls in. */
+.diagram {
+  view-timeline-name: --diagram;
+}
+/* Diagram edges carry a slow travelling dot once drawn. */
+.dg-flow {
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto !important;
+  }
+  .marquee-track > [aria-hidden="true"] {
+    display: none;
+  }
+  .dg-flow,
+  .confetti {
+    display: none;
+  }
+}
+
+/* Pinned "selected work": each card sticks, the next slides over it. */
+@media (prefers-reduced-motion: no-preference) and (min-height: 720px) {
+  [data-stack] > li {
+    position: sticky;
+    top: calc(5.25rem + var(--i, 0) * 12px);
+  }
+  [data-stack] > li > .stack-card {
+    transform-origin: 50% 0;
+    will-change: transform;
+  }
+  html.fx:not(.sda) [data-stack] > li > .stack-card {
+    transform: scale(calc(1 - var(--p, 0) * 0.08)) translateY(calc(var(--p, 0) * -14px));
+    filter: brightness(calc(1 - var(--p, 0) * 0.18));
+    transition: transform 80ms linear;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    html.sda .scroll-progress {
+      animation: progress-grow linear both;
+      animation-timeline: scroll(root);
+    }
+    html.sda [data-parallax] {
+      animation: parallax-shift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+  }
+
+  @supports (animation-timeline: view()) {
+    html.sda [data-reveal] {
+      animation: scroll-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 5%) entry calc(55% + var(--i, 0) * 5%);
+    }
+    html.sda .diagram .dg-edge {
+      animation: dg-draw linear both;
+      animation-timeline: --diagram;
+      animation-range: entry 20% cover 50%;
+    }
+    html.sda .diagram .dg-node {
+      animation: dg-node-in linear both;
+      animation-timeline: --diagram;
+      animation-range: entry calc(5% + var(--d, 0) * 6%) cover calc(30% + var(--d, 0) * 6%);
+    }
+    html.sda .diagram .dg-flow {
+      animation: dg-node-in linear both;
+      animation-timeline: --diagram;
+      animation-range: cover 40% cover 50%;
+    }
+  }
+  @media (min-height: 720px) {
+    @supports (animation-timeline: view()) {
+      html.sda [data-stack] > li > .stack-card {
+        animation: stack-recede linear both;
+        animation-range: entry 0% entry 100%;
+      }
+    }
+  }
+
+  /* Fallback path: IntersectionObserver classes and transitions. */
+  html.fx:not(.sda) :is([data-reveal], .scroll-reveal) {
+    transition:
+      opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
+      transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: calc(var(--i, 0) * 70ms);
+  }
+  html.fx:not(.sda) :is([data-reveal], .scroll-reveal):not(.in-view) {
+    opacity: 0;
+    transform: translateY(36px) scale(0.98);
+  }
+  html.fx:not(.sda) .diagram .dg-edge {
+    transition: stroke-dashoffset 1100ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: calc(var(--d, 0) * 160ms + 200ms);
+  }
+  html.fx:not(.sda) .diagram .dg-node {
+    transition:
+      opacity 500ms ease,
+      transform 500ms cubic-bezier(0.2, 0.75, 0.15, 1);
+    transition-delay: calc(var(--d, 0) * 160ms);
+  }
+  html.fx:not(.sda) .diagram:not(.in-view) .dg-edge {
+    stroke-dashoffset: 1;
+  }
+  html.fx:not(.sda) .diagram:not(.in-view) :is(.dg-node, .dg-flow) {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 /* Print: the CV and every other page print as clean black on white. */
 @media print {
   :root,
@@ -496,6 +763,9 @@ html[data-term-intro="play"] .term-screen:not([data-live]) {
     transition: none !important;
   }
   .scroll-reveal,
+  [data-reveal],
+  .stack-card,
+  .dg-node,
   .chip-pop,
   .reveal,
   .rise-line > span {
