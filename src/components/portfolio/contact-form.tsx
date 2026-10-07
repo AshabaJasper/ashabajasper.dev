@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { fetchFormToken, submitPublicForm } from "@/lib/forms/client";
+import { fetchFormToken, submitPublicForm, FORM_TOKEN_READY_MS, FORM_TOKEN_REFRESH_MS } from "@/lib/forms/client";
 import { contactSchema } from "@/lib/validators/contact";
 import { track } from "@/lib/analytics";
 import { profile } from "@/data/profile";
@@ -58,15 +58,18 @@ export function ContactForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const tokenRef = useRef<string | null>(null);
+  const tokenRef = useRef<{ value: string; at: number } | null>(null);
   const tokenRequest = useRef<Promise<string | null> | null>(null);
   const fieldRefs = useRef<Partial<Record<Field, HTMLInputElement | HTMLTextAreaElement | null>>>({});
   const alertRef = useRef<HTMLDivElement>(null);
 
   function requestToken(): Promise<string | null> {
+    if (tokenRef.current && Date.now() - tokenRef.current.at < FORM_TOKEN_REFRESH_MS) {
+      return Promise.resolve(tokenRef.current.value);
+    }
     tokenRequest.current ??= fetchFormToken().then((token) => {
-      tokenRef.current = token;
-      if (!token) tokenRequest.current = null; // allow a fresh try at submit
+      tokenRef.current = token ? { value: token, at: Date.now() } : null;
+      tokenRequest.current = null;
       return token;
     });
     return tokenRequest.current;
@@ -95,12 +98,17 @@ export function ContactForm() {
     }
 
     setPending(true);
-    const token = tokenRef.current ?? (await requestToken());
+    const token = await requestToken();
     if (!token) {
       setPending(false);
       setFormError(TOKEN_ERROR);
       requestAnimationFrame(() => alertRef.current?.focus());
       return;
+    }
+
+    const age = Date.now() - (tokenRef.current?.at ?? Date.now());
+    if (age < FORM_TOKEN_READY_MS) {
+      await new Promise((resolve) => setTimeout(resolve, FORM_TOKEN_READY_MS - age));
     }
 
     const result = await submitPublicForm("/api/contact", {
@@ -157,7 +165,7 @@ export function ContactForm() {
           tabIndex={-1}
           className="border-destructive/40 bg-destructive/5 rounded-[12px] border p-4 text-[0.95rem] focus-visible:outline-offset-2"
         >
-          <p className="text-foreground font-medium">Your message was not sent.</p>
+          <p className="text-foreground font-medium">We could not confirm your message.</p>
           <p className="text-ink-soft mt-1">{formError}</p>
           <p className="text-ink-soft mt-1">
             Everything you wrote is still here. Press Send message to try again, or write to{" "}

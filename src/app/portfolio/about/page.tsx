@@ -74,7 +74,7 @@ export default function AboutPage() {
             <ExternalLink href="https://persmontechnologies.com" className="link" icon={false}>
               Persmon Technologies
             </ExternalLink>
-            , a software company in Kampala. Together we have shipped 47 projects, from a{" "}
+            , a software company in Kampala. My work with Persmon dates to December 2022. Our portfolio includes 47 projects, from a{" "}
             <Link href="/work/hms" className="link">
               hotel management system
             </Link>{" "}
@@ -97,7 +97,7 @@ export default function AboutPage() {
             <ExternalLink href="https://github.com/Learnnovate-Africa" className="link" icon={false}>
               Learnnovate
             </ExternalLink>
-            , a non-profit that teaches technology skills.
+            , a non-profit that teaches technology skills, where I have worked as founder and programme director since December 2022.
           </p>
 
           <h2>What I am learning</h2>
@@ -130,7 +130,7 @@ export default function AboutPage() {
 
           <h2>Education</h2>
           <p>
-            I studied at {profile.education.school}, where I earned a {profile.education.degree}.
+            I studied at {profile.education.school} from January 2022 to July 2024, where I earned a {profile.education.degree}.
           </p>
 
           <h2>Get in touch</h2>

@@ -1,5 +1,5 @@
 import "server-only";
-import nodemailer, { type Transporter } from "nodemailer";
+import nodemailer, { type Transporter } from "smtp-mailer";
 import { smtpEnv } from "@/lib/env";
 
 /**

@@ -3,8 +3,8 @@ import { umamiConfig } from "@/lib/env";
 import { rootDomain } from "@/lib/sites";
 
 /**
- * Self-hosted Umami: cookieless, no personal data, so no consent banner is
- * needed. Rendered only on the portfolio and blog layouts, never on admin.
+ * Cookieless Umami on public hosts only, following the owner's banner decision.
+ * Excludes URL queries and fragments, and respects Do Not Track.
  * Renders nothing until both public build-time values are configured.
  */
 export function Umami() {
@@ -16,6 +16,9 @@ export function Umami() {
       src={config.scriptUrl}
       data-website-id={config.websiteId}
       data-domains={`${root},blog.${root}`}
+      data-exclude-search="true"
+      data-exclude-hash="true"
+      data-do-not-track="true"
       strategy="afterInteractive"
       defer
     />

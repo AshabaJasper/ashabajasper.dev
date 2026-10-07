@@ -137,6 +137,7 @@ export default async function HomePage() {
                   <span className="text-muted-foreground mt-1.5 block font-mono text-[0.78rem]">{item.role}</span>
                 </dt>
                 <dd className="text-ink-soft mt-3 leading-relaxed">{item.description}</dd>
+                <dd className="text-muted-foreground mt-3 font-mono text-[0.78rem]">{experienceYears(item)}</dd>
               </div>
             ))}
           </dl>

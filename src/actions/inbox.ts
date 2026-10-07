@@ -53,7 +53,7 @@ export const sendReply = action(sendReplySchema, async (input, userId) => {
     });
   } catch (err) {
     console.error("[inbox] reply failed:", err instanceof Error ? err.name : "unknown error");
-    throw new UserInputError("The mail server did not accept the reply. Nothing was sent; your draft is still here.");
+    throw new UserInputError("The mail server could not confirm delivery. Your draft is still here; check your mailbox before trying again.");
   }
 
   const repliedAt = new Date();

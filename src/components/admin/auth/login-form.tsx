@@ -15,7 +15,11 @@ const INITIAL: SignInState = { error: null };
 function withNetworkError(run: (prev: SignInState, data: FormData) => Promise<SignInState>) {
   return async (prev: SignInState, data: FormData): Promise<SignInState> => {
     try {
-      return await run(prev, data);
+      const result = await run(prev, data);
+      // Cookie updates can replace this form in the returned server tree.
+      // Navigate in the completed action even if the form has unmounted.
+      if (result.redirectTo) window.location.assign(result.redirectTo);
+      return result;
     } catch {
       return { error: "The admin could not be reached. Check your connection and try again." };
     }
@@ -34,11 +38,6 @@ export function LoginForm({ offerPin, backToPin }: { offerPin: boolean; backToPi
   const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (state.redirectTo) {
-      // A full load, so the middleware and the layout see the new session cookie.
-      window.location.assign(state.redirectTo);
-      return;
-    }
     if (state.error) {
       setPassword("");
       passwordRef.current?.focus();

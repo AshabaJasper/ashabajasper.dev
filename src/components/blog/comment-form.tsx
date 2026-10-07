@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { fetchFormToken, submitPublicForm } from "@/lib/forms/client";
+import { fetchFormToken, submitPublicForm, FORM_TOKEN_READY_MS, FORM_TOKEN_REFRESH_MS } from "@/lib/forms/client";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +9,8 @@ import { cn } from "@/lib/utils";
  * The public comment form. Contract: docs/API.md (POST /api/comments).
  *
  * - The anti-spam token is fetched on first focus, because the page is cached.
- *   The server silently drops a submission sent within 3 seconds of the token
- *   being issued (and still answers ok), so the form waits out that window
- *   itself rather than ever showing success for something that was not stored.
+ *   The server rejects a submission sent within 3 seconds of token issuance.
+ *   The form waits out that window and refreshes old tokens before submitting.
  * - Field errors are linked with aria-describedby and focus moves to the first
  *   invalid field. A form-level error keeps every entry for a retry.
  * - Success clears the form and fires the analytics event, never before.
@@ -22,8 +21,6 @@ type Values = Record<Field, string>;
 type FieldErrors = Partial<Record<Field, string>>;
 
 const EMPTY: Values = { name: "", email: "", body: "" };
-const MIN_TOKEN_AGE_MS = 3_500;
-const MAX_TOKEN_AGE_MS = 110 * 60 * 1000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function validate(values: Values): FieldErrors {
@@ -93,10 +90,10 @@ export function CommentForm({ postSlug }: { postSlug: string }) {
 
   async function freshToken(): Promise<string | null> {
     if (tokenRequest.current) await tokenRequest.current;
-    if (!token.current || Date.now() - token.current.at > MAX_TOKEN_AGE_MS) await requestToken();
+    if (!token.current || Date.now() - token.current.at > FORM_TOKEN_REFRESH_MS) await requestToken();
     if (!token.current) return null;
     const age = Date.now() - token.current.at;
-    if (age < MIN_TOKEN_AGE_MS) await sleep(MIN_TOKEN_AGE_MS - age);
+    if (age < FORM_TOKEN_READY_MS) await sleep(FORM_TOKEN_READY_MS - age);
     return token.current.value;
   }
 
@@ -174,7 +171,7 @@ export function CommentForm({ postSlug }: { postSlug: string }) {
     <form noValidate onSubmit={onSubmit} onFocus={onFirstFocus} className="comment-form" aria-busy={pending}>
       {formError ? (
         <div ref={formErrorRef} id={ids.formError} role="alert" tabIndex={-1} className="comment-form-error">
-          <p className="font-medium">Your comment was not sent.</p>
+          <p className="font-medium">We could not confirm your comment.</p>
           <p>{formError}</p>
         </div>
       ) : null}

@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { DEVICE_TRUST_MS, MAX_PIN_FAILURES, deviceLabel, isDeviceUsable, pinProblem } from "./pin";
+import { passwordStamp } from "./password-stamp";
 
 /**
  * Trusted devices and the sign-in PIN. Plain functions taking ids, shared by
@@ -42,14 +43,14 @@ export async function getUsableDevice(token: string | undefined | null, now = ne
   if (!token || token.length > 200) return null;
   const device = await prisma.trustedDevice.findUnique({
     where: { tokenHash: hashDeviceToken(token) },
-    include: { user: { select: { id: true, email: true, name: true, pinHash: true, pinLength: true } } },
+    include: { user: { select: { id: true, email: true, name: true, pinHash: true, pinLength: true, passwordHash: true } } },
   });
   if (!device || !device.user.pinHash || !isDeviceUsable(device, now)) return null;
   return device;
 }
 
 export type PinCheck =
-  | { ok: true; user: { id: string; email: string; name: string } }
+  | { ok: true; user: { id: string; email: string; name: string; securityStamp: string } }
   | { ok: false; locked: boolean; triesLeft: number };
 
 /**
@@ -60,18 +61,33 @@ export async function verifyPinOnDevice(token: string, pin: string, now = new Da
   const device = await getUsableDevice(token, now);
   if (!device) return { ok: false, locked: true, triesLeft: 0 };
 
+  // Reserve the attempt before bcrypt. Only five concurrent guesses can
+  // reach the comparison, and changing the PIN or revoking trust closes it.
+  const eligible = {
+    id: device.id, revokedAt: null, expiresAt: { gt: now },
+    failedPinCount: { lt: MAX_PIN_FAILURES },
+    user: { pinHash: device.user.pinHash },
+  };
+  const reserved = await prisma.trustedDevice.updateMany({
+    where: eligible, data: { failedPinCount: { increment: 1 } },
+  });
+  if (reserved.count === 0) return { ok: false, locked: true, triesLeft: 0 };
+
   // Anything that is not plausibly a PIN still costs a try, so garbage cannot probe for free.
   const matches = pinProblem(pin) === null && (await bcrypt.compare(pin, device.user.pinHash!));
 
   if (!matches) {
-    const updated = await prisma.trustedDevice.update({
+    const updated = await prisma.trustedDevice.findUnique({
       where: { id: device.id },
-      data: { failedPinCount: { increment: 1 } },
-      select: { failedPinCount: true },
+      select: { failedPinCount: true, revokedAt: true },
     });
-    const locked = updated.failedPinCount >= MAX_PIN_FAILURES;
+    if (!updated) return { ok: false, locked: true, triesLeft: 0 };
+    const locked = !!updated.revokedAt || updated.failedPinCount >= MAX_PIN_FAILURES;
     if (locked) {
-      await prisma.trustedDevice.update({ where: { id: device.id }, data: { revokedAt: now } });
+      await prisma.trustedDevice.updateMany({
+        where: { id: device.id, failedPinCount: { gte: MAX_PIN_FAILURES }, revokedAt: null },
+        data: { revokedAt: now },
+      });
     }
     await prisma.auditLog.create({
       data: {
@@ -84,15 +100,16 @@ export async function verifyPinOnDevice(token: string, pin: string, now = new Da
     return { ok: false, locked, triesLeft: Math.max(0, MAX_PIN_FAILURES - updated.failedPinCount) };
   }
 
-  await prisma.trustedDevice.update({
-    where: { id: device.id },
+  const accepted = await prisma.trustedDevice.updateMany({
+    where: { ...eligible, failedPinCount: { lte: MAX_PIN_FAILURES } },
     data: { failedPinCount: 0, lastUsedAt: now, expiresAt: new Date(now.getTime() + DEVICE_TRUST_MS) },
   });
+  if (accepted.count === 0) return { ok: false, locked: true, triesLeft: 0 };
   await prisma.auditLog.create({
     data: { userId: device.userId, action: "auth.login.pin", entityType: "TrustedDevice", entityId: device.id },
   });
   const { id, email, name } = device.user;
-  return { ok: true, user: { id, email, name } };
+  return { ok: true, user: { id, email, name, securityStamp: passwordStamp(device.user.passwordHash) } };
 }
 
 /** How many tries a device has left, for the message after a wrong PIN. */

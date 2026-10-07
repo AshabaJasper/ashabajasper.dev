@@ -21,17 +21,18 @@
  * signs in to a public site and never submits a form there.
  *
  * Playwright is resolved from PLAYWRIGHT_PATH (a folder whose node_modules has
- * playwright) or from the default scratch install below.
+ * playwright) or the project's local installation. Install Playwright before
+ * regenerating screenshots if neither is available.
  */
 import { createRequire } from "node:module";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 
-const DEFAULT_PW =
-  "C:/Users/ashab/AppData/Local/Temp/claude/C--Users-ashab-OneDrive-Desktop-Ashabas-OS/115a0957-6f31-4388-8c02-5a771d1c7d07/scratchpad/pw";
-const pwRoot = process.env.PLAYWRIGHT_PATH || DEFAULT_PW;
-const { chromium } = createRequire(path.join(pwRoot, "package.json"))("playwright");
+const resolvePlaywright = process.env.PLAYWRIGHT_PATH
+  ? createRequire(path.join(path.resolve(process.env.PLAYWRIGHT_PATH), "package.json"))
+  : createRequire(import.meta.url);
+const { chromium } = resolvePlaywright("playwright");
 
 const TARGETS = [
   { slug: "hms", url: "https://hms.persmon.cloud" },

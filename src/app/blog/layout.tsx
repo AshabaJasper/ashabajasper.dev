@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/shared/site-footer";
 import { Umami } from "@/components/analytics/umami";
 import { profile } from "@/data/profile";
 import { siteOrigin, siteUrl } from "@/lib/sites";
+import { PRIMARY_NAV, crossHref } from "@/lib/links";
 import "./blog.css";
 
 export const metadata: Metadata = {
@@ -24,7 +25,9 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <SiteHeader site="blog" />
+      <SiteHeader site="blog" homeHref={crossHref("blog", "portfolio", "/")} navItems={PRIMARY_NAV.map((item) => ({
+        ...item, href: crossHref("blog", item.site, item.path),
+      }))} />
       <main id="main" tabIndex={-1} className="outline-none">
         {children}
       </main>

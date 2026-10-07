@@ -7,7 +7,7 @@ import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { Monogram } from "@/components/shared/monogram";
-import { PRIMARY_NAV, crossHref, publicPath, type NavItem } from "@/lib/links";
+import { publicPath, type NavItem } from "@/lib/links";
 import type { Site } from "@/lib/sites";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,11 @@ function isActive(item: NavItem, current: Site, path: string): boolean {
   return path === item.path || path.startsWith(`${item.path}/`);
 }
 
-export function SiteHeader({ site }: { site: Exclude<Site, "admin"> }) {
+export function SiteHeader({ site, homeHref, navItems }: {
+  site: Exclude<Site, "admin">;
+  homeHref: string;
+  navItems: readonly (NavItem & { href: string })[];
+}) {
   const path = publicPath(usePathname() ?? "/");
   const [open, setOpen] = useState(false);
 
@@ -26,7 +30,7 @@ export function SiteHeader({ site }: { site: Exclude<Site, "admin"> }) {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2.5">
           <Link
-            href={crossHref(site, "portfolio", "/")}
+            href={homeHref}
             className="group flex min-w-0 items-center gap-2.5 rounded-full"
             aria-label="Ashaba Jasper, home"
           >
@@ -37,23 +41,23 @@ export function SiteHeader({ site }: { site: Exclude<Site, "admin"> }) {
           </Link>
           {site === "blog" ? (
             <>
-              <span aria-hidden className="text-muted-foreground/60 font-serif text-[1.35rem] leading-none">
+              <span aria-hidden className="text-muted-foreground/60 hidden font-serif text-[1.35rem] leading-none min-[420px]:inline">
                 /
               </span>
-              <Link href="/" className="text-muted-foreground hover:text-foreground font-serif text-[1.35rem] leading-none italic">
+              <Link href="/" className="text-muted-foreground hover:text-foreground hidden font-serif text-[1.35rem] leading-none italic min-[420px]:inline">
                 Writing
               </Link>
             </>
           ) : null}
         </div>
 
-        <nav aria-label="Main" className="hidden items-center gap-1 sm:flex">
-          {PRIMARY_NAV.map((item) => {
+        <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          {navItems.map((item) => {
             const active = isActive(item, site, path);
             return (
               <Link
                 key={item.label}
-                href={crossHref(site, item.site, item.path)}
+                href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "rounded-full px-3.5 py-2 text-[0.92rem] transition-colors",
@@ -67,7 +71,7 @@ export function SiteHeader({ site }: { site: Exclude<Site, "admin"> }) {
           <ThemeToggle className="ml-1" />
         </nav>
 
-        <div className="flex items-center gap-1 sm:hidden">
+        <div className="flex items-center gap-1 md:hidden">
           <ThemeToggle />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
@@ -85,12 +89,12 @@ export function SiteHeader({ site }: { site: Exclude<Site, "admin"> }) {
                 <SheetDescription className="sr-only">Site navigation</SheetDescription>
               </SheetHeader>
               <nav aria-label="Mobile" className="flex flex-col px-4 pb-6">
-                {PRIMARY_NAV.map((item) => {
+                {navItems.map((item) => {
                   const active = isActive(item, site, path);
                   return (
                     <Link
                       key={item.label}
-                      href={crossHref(site, item.site, item.path)}
+                      href={item.href}
                       aria-current={active ? "page" : undefined}
                       onClick={() => setOpen(false)}
                       className={cn(

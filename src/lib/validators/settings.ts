@@ -2,12 +2,16 @@ import { z } from "zod";
 
 export const PASSWORD_MIN_LENGTH = 12;
 export const PASSWORD_MAX_LENGTH = 200;
+export const PASSWORD_MAX_BYTES = 72;
 
 /** A new password: long enough to resist guessing, short enough for bcrypt's 72-byte input. */
 export const newPasswordField = z
   .string()
   .min(PASSWORD_MIN_LENGTH, `Use at least ${PASSWORD_MIN_LENGTH} characters`)
-  .max(PASSWORD_MAX_LENGTH, `Use at most ${PASSWORD_MAX_LENGTH} characters`);
+  .max(PASSWORD_MAX_LENGTH, `Use at most ${PASSWORD_MAX_LENGTH} characters`)
+  .refine((value) => new TextEncoder().encode(value).length <= PASSWORD_MAX_BYTES, {
+    message: `Use a shorter password, at most ${PASSWORD_MAX_BYTES} UTF-8 bytes`,
+  });
 
 export const changePasswordSchema = z
   .object({

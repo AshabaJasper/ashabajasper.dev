@@ -11,7 +11,7 @@ export type ClientActionResult<T> =
   | { ok: false; error: string; fieldErrors?: Record<string, string[] | undefined> };
 
 export const ACTION_NETWORK_ERROR =
-  "The admin could not be reached. Check your connection, then try again. Nothing was changed.";
+  "The action could not be confirmed. Refresh to check its result before trying again.";
 
 export async function callAction<T>(run: () => Promise<ClientActionResult<T>>): Promise<ClientActionResult<T>> {
   try {

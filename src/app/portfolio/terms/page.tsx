@@ -10,7 +10,7 @@ export const metadata: Metadata = pageMetadata({
   path: "/terms",
   title: "Terms",
   description:
-    "Terms of use for ashabajasper.dev and its blog: copyright, reuse of code snippets under the MIT licence, comment rules and moderation, outside links and contact.",
+    "Terms of use for ashabajasper.dev and its blog: copyright, code examples, comment rules and moderation, outside links and contact.",
 });
 
 export default function TermsPage() {
@@ -39,8 +39,8 @@ export default function TermsPage() {
 
           <h2>Code in blog posts</h2>
           <p>
-            You may reuse the code snippets in blog posts under the MIT licence: use, copy, change and share them freely,
-            including in commercial work. The code comes with no warranty of any kind.
+            Code examples explain an implementation and come with no warranty. Check the associated repository for
+            any licence that applies. For permission to reuse material without a stated licence, contact me.
           </p>
 
           <h2>Comments</h2>

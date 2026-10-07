@@ -128,14 +128,14 @@ unset NEW_OWNER_PASSWORD DATABASE_URL
 nor the database password appears in `ps` or the shell history. Afterwards sign in with the new password and check
 Settings for trusted devices you do not recognise.
 
-`scripts/reset-owner-password.ts` updates the single owner's bcrypt hash, clears the
-recent failed sign-in attempts for that email, writes an audit entry, and prints only
-whether it succeeded. If it is not in the repository yet, it must be added before this
-procedure works.
+`scripts/reset-owner-password.ts` updates the single owner's bcrypt hash, invalidates
+all existing sessions, revokes every trusted device, clears failed sign-in attempts
+for that email and writes an audit entry. It prints no credentials. Inbox messages,
+comments and the owner's account are preserved.
 
 ## Moderate a spam wave
 
-The forms already reject most bots silently: a honeypot field, a form token that must be
+The forms reject unverified submissions with an error: a honeypot field, a form token that must be
 3 seconds to 2 hours old, an `Origin` check, and rate limits per sender (5 a minute,
 then 3 messages an hour or 10 comments a day). Comments never appear before approval.
 

@@ -7,6 +7,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { authConfig } from "@/lib/auth.config";
 import { verifyPinOnDevice } from "@/lib/auth/devices";
+import { passwordStamp } from "@/lib/auth/password-stamp";
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -46,11 +47,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         });
         if (recentFailures >= MAX_FAILED_ATTEMPTS) return null;
 
+        // Reserve a failed attempt before comparing, so concurrent requests
+        // cannot all pass the initial count and receive unlimited guesses.
+        const attempt = await prisma.loginAttempt.create({ data: { email, success: false }, select: { id: true } });
+        if ((await prisma.loginAttempt.count({ where: { email, success: false, createdAt: { gte: since } } })) > MAX_FAILED_ATTEMPTS) return null;
         const user = await prisma.user.findUnique({ where: { email } });
         const passwordOk = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-
-        await prisma.loginAttempt.create({ data: { email, success: Boolean(user) && passwordOk } });
         if (!user || !passwordOk) return null;
+        await prisma.loginAttempt.update({ where: { id: attempt.id }, data: { success: true } });
 
         await prisma.auditLog.create({
           data: { userId: user.id, action: "auth.login", entityType: "User", entityId: user.id },
@@ -61,6 +65,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           name: user.name,
           rememberMe: parsed.data.remember === "true",
+          securityStamp: passwordStamp(user.passwordHash),
         };
       },
     }),
@@ -85,7 +90,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 });
 
-export const getSession = cache(() => auth());
+// Every protected page and action uses this guard. The JWT alone cannot prove
+// that its owner still exists or that the password has not changed since login.
+export const getSession = cache(async () => {
+  const session = await auth();
+  if (!session?.user?.id || !session.user.securityStamp) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { passwordHash: true },
+  });
+  if (!user || passwordStamp(user.passwordHash) !== session.user.securityStamp) return null;
+  return session;
+});
 
 /** The signed-in owner's id, or throws. Use at the top of every server action. */
 export async function requireUserId(): Promise<string> {

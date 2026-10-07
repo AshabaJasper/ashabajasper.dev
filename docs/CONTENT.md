@@ -136,9 +136,8 @@ fails it never deploys. Fix the message it prints, which names the file and the 
   these. Anonymise examples.
 - **Code you can run.** Snippets should be correct as shown, or clearly marked as
   shortened with a `// ...` line.
-- The licence for code in posts is not decided yet (owner decision pending; MIT is the
-  proposal). Do not state a licence in a post until it is decided. The prose stays all
-  rights reserved.
+- This site grants no reuse licence for code in posts. An associated repository may
+  have its own licence; otherwise ask the owner. The prose stays all rights reserved.
 
 ## Publishing
 

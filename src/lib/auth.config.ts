@@ -31,7 +31,10 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        const { rememberMe, viaPin } = user as { rememberMe?: boolean; viaPin?: boolean };
+        const { rememberMe, viaPin, securityStamp } = user as {
+          rememberMe?: boolean; viaPin?: boolean; securityStamp?: string;
+        };
+        token.securityStamp = securityStamp;
         token.sessionExpiry =
           Date.now() + (viaPin ? PIN_SESSION_MS : rememberMe ? REMEMBERED_SESSION_MS : SHORT_SESSION_MS);
       } else if (typeof token.sessionExpiry === "number" && Date.now() > token.sessionExpiry) {
@@ -40,7 +43,10 @@ export const authConfig = {
       return token;
     },
     session({ session, token }) {
-      if (session.user) session.user.id = token.id as string;
+      if (session.user) {
+        session.user.id = token.id as string;
+        session.user.securityStamp = token.securityStamp;
+      }
       return session;
     },
   },

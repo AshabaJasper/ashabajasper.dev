@@ -119,18 +119,19 @@ describe("POST /api/contact", () => {
     expect(res.status).toBe(400);
   });
 
-  it("answers 200 and stores nothing when the honeypot is filled", async () => {
+  it("rejects a filled honeypot without a success receipt", async () => {
     const res = await postContact(request(PORTFOLIO, contactBody({ website: "https://spam.example" })));
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ ok: true });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ ok: false });
     expect(db.contactMessage.create).not.toHaveBeenCalled();
     expect(afterCalls).toHaveLength(0);
   });
 
-  it("answers 200 and stores nothing when the token is too early or forged", async () => {
-    for (const token of [issueFormToken(SECRET, Date.now()), issueFormToken("wrong-secret", Date.now() - 10_000), "x"]) {
+  it("rejects early, forged and expired tokens without pretending to store them", async () => {
+    for (const token of [issueFormToken(SECRET, Date.now()), issueFormToken("wrong-secret", Date.now() - 10_000), issueFormToken(SECRET, Date.now() - 3 * 60 * 60 * 1000), "x"]) {
       const res = await postContact(request(PORTFOLIO, contactBody({ token })));
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ ok: false });
     }
     expect(db.contactMessage.create).not.toHaveBeenCalled();
   });
@@ -189,9 +190,10 @@ describe("POST /api/comments", () => {
     expect(db.comment.create).not.toHaveBeenCalled();
   });
 
-  it("answers 200 and stores nothing for a filled honeypot", async () => {
+  it("rejects a filled honeypot without confirming a comment", async () => {
     const res = await postComment(request(BLOG, commentBody({ website: "x" })));
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ ok: false });
     expect(db.comment.create).not.toHaveBeenCalled();
   });
 

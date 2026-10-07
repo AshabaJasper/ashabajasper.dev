@@ -2,9 +2,7 @@
 
 Production runs as one Coolify application on the existing Coolify server (a VPS), built
 from `docker-compose.coolify.yml` in the public GitHub repository
-`AshabaJasper/ashabajasper.dev` and redeployed on every push to `main`. (The repository
-name, its visibility and the branch are still to be confirmed by the owner; adjust the
-URLs below if they differ.)
+`AshabaJasper/ashabajasper.dev` and redeployed on every push to `main`, as approved by the owner.
 
 This document never holds real secrets, the server IP, user names or Coolify uuids.
 Placeholders: `<VPS_IP>` is the server's public IPv4 address, `<COOLIFY_URL>` is the
@@ -55,8 +53,8 @@ parking A record or a `www` CNAME), or they will conflict.
 | A | `stats` | `<VPS_IP>` | 300 |
 | CNAME | `www` | `ashabajasper.dev` | 300 |
 
-The `os` record is not used by this application and is not added as a domain anywhere
-below; keep it only if the owner has another use for it.
+The `os` record serves the separate private Jasper OS application. Keep it configured;
+it is not added as a domain of this public application.
 
 **Wait for DNS before adding domains in Coolify.** Coolify asks Let's Encrypt for a
 certificate as soon as a domain is saved, and Let's Encrypt rate-limits failed

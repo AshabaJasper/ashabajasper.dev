@@ -14,7 +14,9 @@ const INITIAL: SignInState = { error: null };
 function withNetworkError(run: (prev: SignInState, data: FormData) => Promise<SignInState>) {
   return async (prev: SignInState, data: FormData): Promise<SignInState> => {
     try {
-      return await run(prev, data);
+      const result = await run(prev, data);
+      if (result.redirectTo) window.location.assign(result.redirectTo);
+      return result;
     } catch {
       return { error: "The admin could not be reached. Check your connection and try again." };
     }
@@ -34,11 +36,6 @@ export function PinForm({ pinLength }: { pinLength: number | null }) {
 
   // A wrong PIN comes back as a new message: clear the field and take focus again.
   useEffect(() => {
-    if (state.redirectTo) {
-      // A full load, so the middleware and the layout see the new session cookie.
-      window.location.assign(state.redirectTo);
-      return;
-    }
     if (state.error) {
       setPin("");
       inputRef.current?.focus();

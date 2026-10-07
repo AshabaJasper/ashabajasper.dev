@@ -21,7 +21,7 @@ export const profile = {
     {
       name: "Persmon Technologies",
       role: "Co-founder and COO",
-      description: "A Kampala software and digital studio. 47 shipped projects, from hotel systems to civic data.",
+      description: "A Kampala software and digital studio with 47 projects in its portfolio, from hotel systems to civic data.",
       href: "https://persmontechnologies.com",
     },
     {

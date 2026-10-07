@@ -3,7 +3,7 @@ import { getToken } from "next-auth/jwt";
 import { apiAllowedOn, internalPath, resolveSite, siteOrigin } from "@/lib/sites";
 
 /** Admin pages a signed-out visitor may open. */
-const ADMIN_PUBLIC = new Set(["/login", "/setup"]);
+const ADMIN_PUBLIC = new Set(["/login", "/setup", "/robots.txt"]);
 
 /**
  * Whether the request carries a live admin session. Reads the Auth.js JWT
@@ -44,15 +44,18 @@ export async function middleware(req: NextRequest) {
     if (!signedIn && !ADMIN_PUBLIC.has(url.pathname)) {
       return NextResponse.redirect(`${siteOrigin("admin")}/login`);
     }
-    if (signedIn && url.pathname === "/login") {
-      return NextResponse.redirect(`${siteOrigin("admin")}/inbox`);
-    }
+    // The login page checks the database-bound session before redirecting.
+    // A valid-looking JWT may have been revoked by a password change.
   }
 
   // Clone the incoming URL so the rewrite stays on this server (same origin).
   const target = url.clone();
   target.pathname = internalPath(site, url.pathname);
-  const response = NextResponse.rewrite(target);
+  // Keep the visitor's host through the internal rewrite. Server Actions
+  // compare Origin against x-forwarded-host, not the container's loopback host.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-forwarded-host", req.headers.get("host") ?? url.host);
+  const response = NextResponse.rewrite(target, { request: { headers: requestHeaders } });
   if (site === "admin") response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }

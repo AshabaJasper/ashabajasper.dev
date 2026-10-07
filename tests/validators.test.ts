@@ -54,7 +54,7 @@ describe("contact schema (docs/API.md)", () => {
     expect(errorsOf(contactSchema.safeParse(noToken))).toEqual(["token"]);
   });
 
-  it("lets a filled honeypot through validation so the route can answer 200", () => {
+  it("lets the route reject a filled honeypot consistently", () => {
     expect(contactSchema.safeParse({ ...contact, website: "http://spam.example" }).success).toBe(true);
   });
 
@@ -115,6 +115,16 @@ describe("admin schemas", () => {
     expect(
       errorsOf(changePasswordSchema.safeParse({ ...base, newPassword: base.currentPassword, confirmPassword: base.currentPassword })),
     ).toEqual(["newPassword"]);
+  });
+
+  it("rejects passwords bcrypt would truncate, including multibyte text", () => {
+    for (const password of ["x".repeat(73), "\u{1f512}".repeat(19)]) {
+      expect(setupSchema.safeParse({ ...setup, password, confirmPassword: password }).success).toBe(false);
+      expect(changePasswordSchema.safeParse({ currentPassword: "old-passphrase-1", newPassword: password, confirmPassword: password }).success).toBe(false);
+    }
+    for (const password of ["x".repeat(72), "\u{1f512}".repeat(18)]) {
+      expect(setupSchema.safeParse({ ...setup, password, confirmPassword: password }).success).toBe(true);
+    }
   });
 
   it("PIN rules come from src/lib/auth/pin.ts", () => {

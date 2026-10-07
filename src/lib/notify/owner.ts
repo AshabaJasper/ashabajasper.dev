@@ -42,7 +42,7 @@ export async function notifyOwner(notice: OwnerNotice): Promise<void> {
   if (telegramEnv()) {
     tasks.push(
       sendTelegram(telegramText([headline, url])).catch((err: unknown) => {
-        console.error("[notify] telegram failed:", err instanceof Error ? err.message : "unknown error");
+        console.error("[notify] telegram failed:", err instanceof Error ? err.name : "unknown error");
       }),
     );
   }

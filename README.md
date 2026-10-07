@@ -120,7 +120,7 @@ website standard is in [docs/WEBSITE_STANDARD_CHECKLIST.md](docs/WEBSITE_STANDAR
 
 - **Site content** (posts, page copy, images and the design): copyright Ashaba Joshua
   Jasper, all rights reserved.
-- **Code samples inside posts:** licence not decided yet (owner decision pending; MIT is
-  the proposal). Until it is decided, no licence is granted beyond reading.
+- **Code samples inside posts:** no reuse licence is granted by this site. Check the
+  licence of an associated repository or ask the owner for permission.
 - **Fonts:** Geist, Geist Mono and Instrument Serif under the SIL Open Font License 1.1.
   The font files and their licence texts are in `assets/fonts`.

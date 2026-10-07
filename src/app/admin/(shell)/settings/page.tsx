@@ -34,8 +34,8 @@ function Section({ id, title, description, children }: { id: string; title: stri
 
 function ConfiguredRow({ label, configured, detail }: { label: string; configured: boolean; detail: string }) {
   return (
-    <li className="flex items-start justify-between gap-4 py-3.5">
-      <div>
+    <li className="flex flex-col items-start justify-between gap-2 py-3.5 sm:flex-row sm:gap-4">
+      <div className="min-w-0 break-words">
         <p className="font-medium">{label}</p>
         <p className="text-muted-foreground mt-0.5 text-sm">{detail}</p>
       </div>
@@ -76,7 +76,7 @@ export default async function SettingsPage() {
         description={`Signed in as ${user.name}, ${user.email}.`}
       />
 
-      <Section id="password-heading" title="Password" description="At least 12 characters. Changing it also stops every other device from using the PIN.">
+      <Section id="password-heading" title="Password" description="At least 12 characters. Changing it ends existing sessions and stops other devices from using the PIN.">
         <PasswordForm />
       </Section>
 

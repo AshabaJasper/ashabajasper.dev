@@ -11,7 +11,9 @@ const INITIAL: SetupState = { error: null, fieldErrors: {} };
 /** A dropped connection becomes a message on the form instead of an error page. Entries are kept. */
 async function withSetupNetworkError(prev: SetupState, data: FormData): Promise<SetupState> {
   try {
-    return await completeSetup(prev, data);
+      const result = await completeSetup(prev, data);
+      if (result.done) window.location.assign("/login");
+      return result;
   } catch {
     return { error: "The admin could not be reached. Check your connection and try again.", fieldErrors: {} };
   }
@@ -31,10 +33,6 @@ export function SetupForm() {
   });
 
   useEffect(() => {
-    if (state.done) {
-      window.location.assign("/login");
-      return;
-    }
     if (Object.keys(state.fieldErrors).length > 0) focusFirstError(state.fieldErrors, (field) => `setup-${field}`);
   }, [state]);
 

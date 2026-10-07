@@ -115,7 +115,7 @@ async function main() {
       { name: marker, email: "verify@example.com", subject: "early", message: "Sent too soon to count.", website: "", token: tokenA },
       portfolio.origin,
     );
-    check(early.status === 200, "an early submission answers 200");
+    check(early.status === 400 && JSON.parse(early.body).ok === false, "an early submission is rejected without a success receipt");
 
     const wrongOrigin = await call(
       "POST",
@@ -155,7 +155,7 @@ async function main() {
     check(comment.status === 200 && JSON.parse(comment.body).ok === true, `POST /api/comments on "${slug}" answers 200 { ok: true }`);
 
     const messages = await prisma.contactMessage.findMany({ where: { name: marker } });
-    check(messages.length === 1, "exactly one contact message stored (the early one was dropped)");
+    check(messages.length === 1, "exactly one contact message stored (the early one was rejected)");
     check(messages[0].status === "NEW" && /^[0-9a-f]{32}$/.test(messages[0].ipHash ?? ""), "it is NEW with a 32-character IP hash");
     check(!JSON.stringify(messages[0]).includes("203.0.113.250"), "the raw IP is not stored");
 

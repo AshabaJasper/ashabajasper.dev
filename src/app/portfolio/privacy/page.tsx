@@ -50,14 +50,16 @@ export default function PrivacyPage() {
           <h3>With every message and comment</h3>
           <p>
             A keyed hash of your IP address (a one-way code made with a secret key, not the address itself), which is
-            deleted after 30 days, and your browser&apos;s user agent string.
+            eligible for deletion after 30 days, and your browser&apos;s user agent string. Cleanup runs when a new
+            submission is processed, so deletion can happen later when the site is quiet.
           </p>
           <h3>When you visit any page</h3>
           <ul>
-            <li>The reverse proxy that serves the site keeps standard server access logs.</li>
             <li>
-              Aggregate visit statistics are collected with a self-hosted instance of Umami, an analytics tool that uses
-              no cookies and stores no personal data.
+              A self-hosted instance of Umami collects page paths, referring sites, approximate location, browser,
+              operating system, device type and visit counts without cookies. It processes the IP address to derive
+              location and a visit identifier; it does not store the raw IP address. Query strings, URL fragments and
+              form contents are excluded from tracking. The tracker respects your browser&apos;s Do Not Track setting.
             </li>
           </ul>
 
@@ -79,7 +81,7 @@ export default function PrivacyPage() {
               <strong>Hostinger</strong> hosts the server.
             </li>
             <li>
-              <strong>An email provider</strong>, when one is set up for the site, carries two things: a short notice to
+              <strong>Hostinger Mail</strong>, when notifications are enabled, carries two things: a short notice to
               the site owner that a message or comment has arrived, with the sender&apos;s name but never the message,
               and any reply sent from the site&apos;s admin. Replies sent from a personal mailbox go through that
               mailbox&apos;s provider as usual.
@@ -96,7 +98,9 @@ export default function PrivacyPage() {
               Contact messages and comments: until the site owner deletes them. Published comments stay visible with
               their post.
             </li>
-            <li>The IP hash: 30 days, then it is cleared automatically.</li>
+            <li>The IP hash: eligible for automatic cleanup after 30 days, as described above.</li>
+            <li>Database backups: about two weeks. Deleted data may remain in a backup until it expires.</li>
+            <li>Analytics: retained until the site owner clears it; no automatic retention period is configured.</li>
             <li>
               A log of admin actions, such as a message being marked as read. It records the action and the time, not
               your name, email or message, and is kept until the site owner deletes it.

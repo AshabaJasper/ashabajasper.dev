@@ -77,15 +77,15 @@ export function DeviceList({ devices, hasPin }: { devices: DeviceRow[]; hasPin: 
 export function SignOutOthers({ otherCount }: { otherCount: number }) {
   return (
     <div className="space-y-3">
-      <h3 className="font-medium">Sign out of other devices</h3>
+      <h3 className="font-medium">Stop trusting other devices</h3>
       <p className="text-muted-foreground max-w-[60ch] text-sm">
         Every other browser stops being trusted and has to use the password to sign in again. A session already open in
         another browser keeps working until it expires: within a day, or 30 days with “remember me”.
       </p>
       <ConfirmDialog
-        title="Sign out of other devices?"
+        title="Stop trusting other devices?"
         description="Every browser except this one goes back to the password screen for its next sign-in."
-        confirmLabel="Sign out others"
+        confirmLabel="Stop trusting others"
         onConfirm={async () => {
           const result = await callAction(() => signOutOtherDevices({}));
           if (!result.ok) {
@@ -97,7 +97,7 @@ export function SignOutOthers({ otherCount }: { otherCount: number }) {
         }}
         trigger={
           <Button type="button" variant="outline" className="h-11 rounded-full px-5" disabled={otherCount === 0}>
-            Sign out of other devices
+            Stop trusting other devices
           </Button>
         }
       />

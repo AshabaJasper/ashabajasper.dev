@@ -37,7 +37,7 @@ export function action<S extends z.ZodTypeAny, R>(
       return { ok: true, data };
     } catch (err) {
       if (err instanceof UserInputError) return { ok: false, error: err.message };
-      console.error("[action]", err);
+      console.error("[action]", err instanceof Error ? err.name : "UnknownError");
       return { ok: false, error: "Something went wrong. Please try again." };
     }
   };
@@ -62,6 +62,6 @@ export async function audit(
       },
     });
   } catch (err) {
-    console.error("[audit]", err);
+    console.error("[audit]", err instanceof Error ? err.name : "UnknownError");
   }
 }

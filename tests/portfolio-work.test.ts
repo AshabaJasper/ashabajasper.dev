@@ -85,9 +85,12 @@ describe("portfolio work data", () => {
     expect(new Set(sectors.map((s) => s.slug)).size).toBe(sectors.length);
   });
 
-  it("renders experience without years while they are unknown", () => {
+  it("uses verified organisation and education dates without implying a founding date", () => {
     expect(experience).toHaveLength(3);
-    for (const entry of experience) expect(experienceYears(entry)).toBeNull();
-    expect(experienceYears({ ...experience[0], startYear: 2023, endYear: null })).toBe("2023 to now");
+    expect(experienceYears(experience[0])).toBe("With Persmon since 2022");
+    expect(experienceYears(experience[1])).toBe("2022 to now");
+    expect(experienceYears(experience[2])).toBe("2022 to 2024");
+    expect(experienceYears({ ...experience[1], startYear: null, endYear: null })).toBeNull();
+    expect(experienceYears({ ...experience[1], startYear: 2023, endYear: null })).toBe("2023 to now");
   });
 });

@@ -5,6 +5,7 @@ import { Umami } from "@/components/analytics/umami";
 import { StickyCta } from "@/components/portfolio/sticky-cta";
 import { profile } from "@/data/profile";
 import { siteOrigin, siteUrl } from "@/lib/sites";
+import { PRIMARY_NAV, crossHref } from "@/lib/links";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteOrigin("portfolio")),
@@ -24,7 +25,9 @@ export default function PortfolioLayout({ children }: { children: React.ReactNod
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <SiteHeader site="portfolio" />
+      <SiteHeader site="portfolio" homeHref="/" navItems={PRIMARY_NAV.map((item) => ({
+        ...item, href: crossHref("portfolio", item.site, item.path),
+      }))} />
       <main id="main" tabIndex={-1} className="outline-none">
         {children}
       </main>

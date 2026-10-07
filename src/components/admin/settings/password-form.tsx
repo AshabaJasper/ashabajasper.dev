@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { signOut } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { changePassword } from "@/actions/settings";
@@ -50,7 +51,8 @@ export function PasswordForm() {
           }
           setErrors({});
           setValues(EMPTY);
-          toast.success("Password changed. Other devices can no longer use the PIN.");
+          toast.success("Password changed. Sign in again with your new password.");
+          await signOut({ callbackUrl: "/login" });
         });
       }}
     >

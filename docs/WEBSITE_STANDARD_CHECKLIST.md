@@ -59,9 +59,9 @@ is filled with a guess.
    then remove `SETUP_TOKEN` from Coolify (DEPLOYMENT.md section 7).
 7. **Retention periods** for contact messages and comments, if the privacy page is to
    state a period beyond "until deleted by the owner".
-8. **Licence for code samples in posts**: confirm MIT (proposed) or another licence
-   before the terms page or any post states one.
-9. **GitHub repository**: confirm the name `AshabaJasper/ashabajasper.dev`, that it is
-   public, and that `main` is the deploy branch. The local checkout has no remote yet.
-10. **The `os` DNS record**: confirm whether it is wanted; it is not a domain of this
-    application (DEPLOYMENT.md section 2).
+8. Code samples currently have no reuse licence granted by this site. Associated
+   repositories may have their own licences; publishing a new grant needs an owner decision.
+9. **GitHub repository**: the owner approved the public repository
+   `AshabaJasper/ashabajasper.dev`, with `main` as the deploy branch. Publication is pending.
+10. **The `os` DNS record**: approved and already configured for the private Jasper OS
+    migration; it is not a domain of this application.

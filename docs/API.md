@@ -8,7 +8,9 @@ Two public forms post JSON to route handlers under `src/app/api`. The browser si
 Hosts: portfolio and blog. Response `200 { "token": "<issuedAtMs>.<hmac>" }`, `Cache-Control: no-store`.
 The token is an HMAC-SHA256 (keyed by `AUTH_SECRET`) of the issue time. A submission is
 accepted only when the token is at least 3 seconds and at most 2 hours old. Fetch it when
-the visitor first focuses a field, not at render, because pages are cached.
+the visitor first focuses a field, not at render, because pages are cached. Both forms
+wait at least 3.5 seconds after receiving a new token and refresh it after 110 minutes.
+Token acquisition and submission each have a 15-second timeout with a retry path.
 
 ## `POST /api/contact`
 
@@ -44,12 +46,12 @@ Host: blog only (404 elsewhere). Body, at most 16 KB:
 
 | Status | Body | Meaning |
 | --- | --- | --- |
-| 200 | `{ "ok": true }` | Stored (comments wait for approval). Also returned, with nothing stored, when the honeypot is filled or the token is too fast or invalid, so bots learn nothing. |
-| 400 | `{ "ok": false, "error": "...", "fieldErrors": { "email": ["..."] } }` | Validation failed. Field keys match the body keys. |
+| 200 | `{ "ok": true }` | Stored (comments wait for approval). Success is never returned for a discarded submission. |
+| 400 | `{ "ok": false, "error": "...", "fieldErrors": { "email": ["..."] } }` | Validation failed. Field keys match the body keys. Honeypots and early, invalid or expired tokens also return 400, with a general verification error. |
 | 403 | `{ "ok": false, "error": "..." }` | `Origin` header is not this site's origin. |
 | 413 | `{ "ok": false, "error": "..." }` | Body over 16 KB. |
 | 429 | `{ "ok": false, "error": "..." }` | Rate limited (5 a minute per sender, then 3 messages an hour or 10 comments a day). |
-| 500 | `{ "ok": false, "error": "..." }` | Storage failed. Nothing was stored; the client keeps the entries for retry. |
+| 500 | `{ "ok": false, "error": "..." }` | Submission could not be confirmed; the client keeps entries for retry and never shows success. |
 
 After `ok: true` the client fires the analytics event (`contact-sent`, or `comment-sent`
 with `{ post: slug }`), then shows the success state: the contact form navigates to

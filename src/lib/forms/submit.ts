@@ -12,8 +12,8 @@ import { SlidingWindowLimiter } from "./rate-limit";
  * The shared pipeline behind POST /api/contact and POST /api/comments, in the
  * order docs/API.md fixes:
  *
- *   origin 403 -> size 413 -> validation 400 -> honeypot or token: 200, nothing
- *   stored -> in-memory limits 429 (per sender, then per form) -> database
+ *   origin 403 -> size 413 -> validation or verification 400 -> in-memory
+ *   limits 429 (per sender, then per form) -> database
  *   counts 429 -> insert (500 when it fails) -> after the response: notify
  *   the owner and housekeeping.
  *
@@ -80,7 +80,7 @@ function json(status: number, body: Record<string, unknown>): Response {
 
 const OK = () => json(200, { ok: true });
 
-const SERVER_ERROR = { ok: false, error: "Something went wrong on our side. Nothing was sent; please try again." };
+const SERVER_ERROR = { ok: false, error: "We could not confirm the submission. Your entries are still here; please try again." };
 
 /**
  * Never lets an exception escape as a framework error page: anything
@@ -137,10 +137,11 @@ async function runPipeline<S extends z.ZodType<BaseFields>>(
     if (extra) return json(400, { ok: false, error: "Please check the highlighted fields.", fieldErrors: extra });
   }
 
-  // Bots learn nothing: a filled honeypot or a bad token looks like success.
-  if (data.website !== "") return OK();
+  // Success means the submission was stored. Rejected requests never get a receipt.
+  const verificationError = { ok: false, error: "The form could not be verified. Please try again." };
+  if (data.website !== "") return json(400, verificationError);
   const secret = authSecret();
-  if (!verifyFormToken(data.token, secret, now()).ok) return OK();
+  if (!verifyFormToken(data.token, secret, now()).ok) return json(400, verificationError);
 
   const ipHash = ipHashFromHeaders(req.headers, secret);
   const tooMany = { ok: false, error: "That is a lot of messages in a short time. Please wait a while and try again." };
