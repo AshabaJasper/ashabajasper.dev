@@ -76,6 +76,11 @@ legend and direct labels, and ships a table view.
 | Body | Geist | 16 to 18px | measure 60 to 70ch |
 | Kicker, meta, chips, prompts | Geist Mono | 11 to 14px | `.kicker`, `.kicker-prompt` adds `// ` |
 
+The pages load Geist and Geist Mono through `next/font` (`src/app/layout.tsx`). The
+1200x630 Open Graph cards (`src/lib/og.tsx`) are the one place another face remains:
+they set titles in Instrument Serif with Geist and Geist Mono, from the files in
+`assets/fonts`.
+
 ### Space and layout
 
 - Container `.container-page`: 1200px max, gutters 16, 24 and 32px.

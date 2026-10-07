@@ -14,8 +14,9 @@ DB=$(sudo docker ps --format '{{.Names}}' | grep "^db-$U" | head -n 1)
 
 ## Deploy
 
-A push to `main` is the release: CI runs the checks, and Coolify's webhook builds and
-deploys. Nothing else is needed for content or code changes.
+A push to `main` runs CI but does **not** deploy: there is no GitHub webhook yet
+(DEPLOYMENT.md section 5). A release is a push followed by a deploy you trigger.
+Docs-only changes need no deploy.
 
 1. Locally: `npm run typecheck`, `npm run lint`, `npm test`, `npm run content:check`,
    each on its own, reading every exit code.
@@ -23,9 +24,12 @@ deploys. Nothing else is needed for content or code changes.
    `~/ashabajasper-dev-backup.sh` on the server. Migrations in this repo only add; one
    that drops or rewrites data needs a deliberate decision and a fresh backup.
 3. `git push origin main`.
-4. Watch the deployment in Coolify (application, Deployments). `migrate` must exit 0 and
+4. Trigger the deploy: Coolify, the application, **Deploy**; or
+   `curl -s -X POST -H "Authorization: Bearer <COOLIFY_API_TOKEN>" "<COOLIFY_URL>/api/v1/deploy?uuid=<app-uuid>"`.
+5. Watch the deployment in Coolify (application, Deployments). `migrate` must exit 0 and
    `app` must turn healthy.
-5. Spot-check with the curl lines in DEPLOYMENT.md section 10.
+6. Spot-check with the curl lines in DEPLOYMENT.md section 10.
+7. If pages or posts changed, resubmit to IndexNow (below).
 
 A manual redeploy without a push: Coolify, the application, **Redeploy**. After changing
 any environment variable, **Redeploy**: a Restart is not guaranteed to recreate the
@@ -33,6 +37,38 @@ containers with the new values, and the two `NEXT_PUBLIC_UMAMI_` values are bake
 build time anyway. Confirm a runtime change took effect with `printenv <NAME>` in the
 `app` service's Terminal in Coolify (it prints the value, so never paste the output
 anywhere).
+
+## Update the CV PDF
+
+The download at `https://ashabajasper.dev/cv/Ashaba-Joshua-Jasper-CV-2026.pdf` is the
+owner's own CV, served as a static file from `public/cv/`. It is linked from the home,
+`/cv`, `/contact` and `/contact/thanks` pages. Nothing generates it.
+
+1. Start from the owner's new CV file.
+2. **Redact the referees.** Remove every referee's phone number and email with true PDF
+   redaction (for example Adobe Acrobat's Redact tool, or another redaction tool that
+   deletes the underlying text and then sanitises the document). A black box drawn over
+   the text is not redaction: the text stays selectable. The owner's own phone numbers
+   stay, at his request.
+3. Check the result: open it, try to select and copy where the details were, and search
+   the PDF text for them (for example `pdftotext new.pdf - | grep -E '@|\+256'` and read
+   every hit). Nothing about a referee beyond what the owner approved may remain.
+4. Replace `public/cv/Ashaba-Joshua-Jasper-CV-2026.pdf` with the redacted file. If the
+   year or file name changes, update every link (`grep -rn "CV-2026.pdf" src`) and
+   `docs/PROFILE_SOURCES.md`.
+5. If the facts changed, update `src/data/cv.ts` and `src/data/experience.ts` to match,
+   quoting the CV and never inventing.
+6. Commit, push, deploy, then check
+   `curl -sI https://ashabajasper.dev/cv/Ashaba-Joshua-Jasper-CV-2026.pdf` returns 200
+   with `application/pdf`.
+
+## Resubmit to IndexNow
+
+After a deploy that adds or changes pages or posts, run the loop in DEPLOYMENT.md
+section 12 with `<INDEXNOW_KEY>` replaced by the name of the 32-hex `.txt` file in
+`public/` (without `.txt`). It submits the URLs of each host's sitemap; `200` or `202`
+means accepted. Do not rename or delete the key file: the matcher exception in
+`src/middleware.ts` and earlier submissions depend on it.
 
 ## Roll back to a previous commit
 
@@ -162,7 +198,7 @@ When spam still gets through:
 | Container health | `sudo docker inspect --format '{{.State.Health.Status}}' "$APP"`. |
 | Backups | `~/backups/ashabajasper-dev-backup.log` on the server. |
 | Sign-ins, setup, settings changes, moderation | The admin audit log (`AuditLog` table), visible in the admin. |
-| Visits and conversion events | Umami at `https://stats.ashabajasper.dev`. |
+| Visits and conversion events | Umami at `https://stats.ashabajasper.dev`, once it is deployed (not yet, as of 8 October 2026). |
 
 Container logs use the json-file driver capped at 5 files of 10 MB per service, so they
 cover days, not months. Logs never contain secrets, passwords, PINs, raw IP addresses or

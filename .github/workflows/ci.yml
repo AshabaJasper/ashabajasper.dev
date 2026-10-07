@@ -1,6 +1,7 @@
 # Checks every push and pull request to main. Needs no secrets: the values below
 # are placeholders so config can load; no step talks to a database.
-# Production deploys are separate: Coolify builds main on its own webhook.
+# Production deploys are separate: a deploy of main is triggered in Coolify
+# (no webhook yet, see DEPLOYMENT.md section 5).
 name: CI
 
 on:

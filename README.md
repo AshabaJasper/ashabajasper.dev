@@ -13,12 +13,36 @@ scientist in Kampala. One Next.js app serves three hosts:
 `Host` header to a site and rewrites each request into that site's folder; see
 `docs/ARCHITECTURE.md`.
 
+## Live
+
+Live since 7 October 2026 on Coolify, on the owner's VPS, with Let's Encrypt
+certificates. Checked with curl on 8 October 2026.
+
+- https://ashabajasper.dev: portfolio (home, `/work` with 47 projects and 5 case
+  studies, `/cv`, `/about`, `/now`, `/contact`, `/privacy`, `/terms`)
+- https://blog.ashabajasper.dev: blog (3 posts, tags, RSS at `/feed.xml`)
+- https://admin.ashabajasper.dev: admin (signed-in owner only, `noindex`)
+
+Search and AI discovery files on the public hosts:
+
+| File | Hosts | Source |
+| --- | --- | --- |
+| `/robots.txt` | portfolio, blog (admin answers `Disallow: /`) | `src/lib/crawlers.ts` names the AI crawlers as allowed |
+| `/sitemap.xml` | portfolio, blog | `src/app/<site>/sitemap.xml/route.ts`, absolute URLs |
+| `/llms.txt` | portfolio, blog | `buildLlmsTxt()` in `src/lib/llms.ts` |
+| `/llms-full.txt` | portfolio only | `buildLlmsFullTxt()` in `src/lib/llms.ts`, includes every post body |
+| `/<key>.txt` | portfolio, blog | IndexNow key file in `public/` |
+
+The CV download is `public/cv/Ashaba-Joshua-Jasper-CV-2026.pdf`, the owner's own CV with
+the referees' contact details redacted (see `docs/RUNBOOK.md` to replace it).
+
 ## Stack
 
 Next.js 15 (App Router, Turbopack), React 19, TypeScript strict, Tailwind CSS v4 with
 shadcn/ui (new-york), Prisma 6 on Postgres 16, Auth.js v5 (credentials, owner only),
 MDX through next-mdx-remote with Shiki highlighting, Vitest. Self-hosted with Docker on
-Coolify. Analytics is self-hosted, cookieless Umami.
+Coolify. Analytics is planned as self-hosted, cookieless Umami: the code is ready, the
+Umami service is not deployed yet, so production loads no analytics script.
 
 ## Local development
 
@@ -62,6 +86,7 @@ Several dev servers can run side by side with their own build folders, for examp
 | `npm run db:studio` | Prisma Studio |
 | `npm run images` | Resize and compress source images into `public/images` |
 | `npm run icons` | Regenerate the favicon and touch icon set |
+| `npm run logos` | Regenerate the tech logos for the work map from simple-icons |
 
 Before every commit, run typecheck, lint and test separately and read each exit code.
 CI (`.github/workflows/ci.yml`) runs the same checks plus the content check on every push
@@ -70,8 +95,9 @@ and pull request to `main`.
 ## Writing
 
 Posts are MDX files in `content/posts`; the filename is the slug. Frontmatter, MDX
-features, drafts, series, tags, social images and house style are in
-[docs/CONTENT.md](docs/CONTENT.md). Publishing is a commit to `main`.
+features, figure components, drafts, series, tags, social images and house style are in
+[docs/CONTENT.md](docs/CONTENT.md). Publishing is a commit to `main` followed by a
+deploy in Coolify.
 
 ## Environment variables
 
@@ -109,9 +135,11 @@ SMTP or Telegram is configured, never the values.
 
 ## Deployment
 
-Production runs on an existing Coolify server: `docker-compose.coolify.yml` (app, a
-one-shot migrate service and Postgres 16), auto-deployed on every push to `main`. DNS,
-Coolify setup, Umami, backups and a verification checklist are in
+Production runs on the owner's Coolify server: `docker-compose.coolify.yml` (app, a
+one-shot migrate service and Postgres 16), built with the Docker Compose build pack. A
+push to `main` does not deploy by itself yet: push, then press **Deploy** in Coolify (or
+call its deploy API). The GitHub webhook is optional and not set up. DNS, Coolify setup,
+Umami, backups, IndexNow and a verification checklist are in
 [DEPLOYMENT.md](DEPLOYMENT.md). Day-to-day operations (rollback, restore, secret rotation,
 lockout, spam) are in [docs/RUNBOOK.md](docs/RUNBOOK.md). Launch status against the
 website standard is in [docs/WEBSITE_STANDARD_CHECKLIST.md](docs/WEBSITE_STANDARD_CHECKLIST.md).
@@ -122,5 +150,9 @@ website standard is in [docs/WEBSITE_STANDARD_CHECKLIST.md](docs/WEBSITE_STANDAR
   Jasper, all rights reserved.
 - **Code samples inside posts:** no reuse licence is granted by this site. Check the
   licence of an associated repository or ask the owner for permission.
-- **Fonts:** Geist, Geist Mono and Instrument Serif under the SIL Open Font License 1.1.
-  The font files and their licence texts are in `assets/fonts`.
+- **Fonts:** the site uses Geist and Geist Mono. The Open Graph images
+  (`src/lib/og.tsx`) also use Instrument Serif. All three are under the SIL Open Font
+  License 1.1; the files used for the images and their licence texts are in
+  `assets/fonts`.
+- **Tech logos** on the work map come from the simple-icons package (CC0 1.0), generated
+  into `src/data/tech-logos.ts` by `npm run logos`.

@@ -65,15 +65,8 @@ Reading time is calculated from the body, never written by hand.
   backticks.
 - **GFM:** tables, task lists, strikethrough and autolinked URLs work as on GitHub. Keep
   tables narrow enough to read on a phone, or they scroll sideways inside their block.
-- **`<Note>`** for an aside the reader can skip, written as a block in the body:
-
-  ```mdx
-  <Note title="Why IndexedDB">
-  The sync queue survives a browser restart because it lives in IndexedDB.
-  </Note>
-  ```
-
-  `title` is optional. Keep notes rare: one or two per post at most.
+- **Figure components** (diagrams, timelines, stats, comparisons, callouts): see the
+  next section.
 - **Links:** use relative links between posts (`[the first part](/offline-first-forms)`)
   and full `https://` URLs elsewhere. Link to the portfolio with
   `https://ashabajasper.dev/...`.
@@ -82,8 +75,67 @@ Reading time is calculated from the body, never written by hand.
   Purely decorative images take `alt=""`. Prefer a code block or a table to a screenshot
   of text.
 
-Anything else (raw HTML, scripts, imports from npm) is not supported. If a post needs a
-new component, add it to the blog's MDX components in code first, with a test.
+Anything else (raw HTML, scripts, imports from npm, JavaScript expressions in braces) is
+not supported.
+
+## Figure components
+
+A post may use only the components named in `MDX_COMPONENT_NAMES`
+(`src/components/blog/mdx-names.ts`); they are registered in
+`src/components/blog/mdx-components.tsx`, and `tests/blog-figures.test.ts` keeps the two
+lists equal. `npm run content:check` fails on any other component and prints the list.
+Props are plain strings: JavaScript expressions are blocked, so there are no `{...}`
+values. Every figure keeps its words in the HTML, so it reads without the picture and
+without JavaScript.
+
+| Component | Use | Props |
+| --- | --- | --- |
+| `<Note>` | An aside the reader can skip. Keep to one or two a post. | `title` (optional) |
+| `<Callout>` | A highlighted box with an icon. | `type`: `note` (default), `tip`, `warning` or `check`; `title` (optional) |
+| `<Diagram>` with `<Node>` children | A left-to-right flow with arrows, as a numbered list. | Diagram: `caption`, `summary` (a sentence for screen readers saying what the figure shows). Node: `title` (required), `detail`, `label`, `icon`, `tone` (`accent` or `muted`) |
+| `<Steps>` with `<Step>` children | A numbered vertical sequence. | Steps: `caption`. Step: `title` (required), `icon`; the body is the step's text |
+| `<Timeline>` with `<Step>` children | The same as `Steps`, for when the order is time. | As `Steps` |
+| `<Stats>` with `<Stat>` children | A row of figures. Only real numbers you can stand behind. | Stats: `caption`. Stat: `value` and `label` (required), `unit` |
+| `<Compare>` with two `<CompareSide>` children | Before and after, or two options side by side. | Compare: `caption`. CompareSide: `title` (required), `label`, `icon`, `tone` (`before` shows a cross, `after` a tick, default `neutral`); the body is the side's text |
+| `<Cards>` with `<Card>` children | An icon grid, optionally linking to sections of the post. | Cards: `caption`. Card: `title` (required), `icon`, `href` (for example `#a-heading-id`); the body is the card's text |
+| `<BookingTimeline />`, `<RaceSequence />`, `<CnnLayers />` | Hand-drawn SVG figures made for one post each (`src/components/blog/post-diagrams.tsx`), with a text alternative in the HTML. | none |
+
+`icon` takes a name from `FIGURE_ICONS` in `src/components/blog/figure-icons.ts`:
+`banknote`, `book`, `brain`, `camera`, `chart`, `check`, `cross`, `clipboard`,
+`contrast`, `crop`, `database`, `file`, `flask`, `images`, `inbox`, `info`, `layers`,
+`lightbulb`, `mail`, `message`, `receipt`, `scan`, `send`, `server`, `shield`, `bag`,
+`cart`, `sigma`, `phone`, `store`, `test`, `warning`, `person`, `wrench`. An unknown name
+renders no icon.
+
+```mdx
+<Diagram caption="From a photo to a prediction." summary="A photo is cleaned with OpenCV, a CNN reads it, and a softmax picks one of 26 letters.">
+  <Node icon="camera" label="Input" title="A photo of one letter" />
+  <Node icon="layers" label="CNN" title="Learn the strokes" detail="3 convolution blocks" />
+  <Node icon="check" label="Output" tone="accent" title="Pick the letter" />
+</Diagram>
+
+<Callout type="tip" title="Where the real gains are">
+Better data beats a bigger model here.
+</Callout>
+```
+
+A new component needs code first: add it to `mdx-figures.tsx` (or `post-diagrams.tsx`
+for a one-off drawing), register it in `mdx-components.tsx`, add its name to
+`MDX_COMPONENT_NAMES`, and keep the tests passing.
+
+## Posts in llms-full.txt
+
+`https://ashabajasper.dev/llms-full.txt` (`buildLlmsFullTxt()` in `src/lib/llms.ts`)
+ends with a "Blog posts" section that holds every published post: its title, URL, date
+and the **raw MDX body** as written in the file. Drafts are left out. Two consequences:
+
+- The post's `##` headings appear as headings in that file, so keep them descriptive.
+- Figure components appear as their source tags, for example `<Node title="..." />`.
+  Put the meaning in the props and captions (`title`, `detail`, `caption`, `summary`),
+  so a language model reading the tags gets the same facts as a reader seeing the figure.
+
+`/llms.txt` on both public hosts lists every post with its title, URL and description.
+Both files are built from the same post files, so a deploy updates them.
 
 ## Drafts
 
@@ -149,6 +201,7 @@ git commit -m "Blog: <title>"
 git push origin main
 ```
 
-The push triggers CI and the Coolify deploy. The post is live once the deploy finishes,
-usually within a few minutes. To fix a typo later, edit the file, set `updated` if the
+The push triggers CI. It does not deploy by itself: there is no webhook yet, so trigger
+the deploy in Coolify (DEPLOYMENT.md section 5). The post is live once the deploy
+finishes. Then resubmit the blog sitemap to IndexNow (DEPLOYMENT.md section 12). To fix a typo later, edit the file, set `updated` if the
 change is meaningful, and push again.

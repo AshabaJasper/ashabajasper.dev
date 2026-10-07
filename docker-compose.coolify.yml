@@ -1,5 +1,5 @@
-# ashabajasper.dev as a Coolify application (DEPLOYMENT.md). Every push to `main`
-# rebuilds and redeploys. One `app` service answers for ashabajasper.dev,
+# ashabajasper.dev as a Coolify application (DEPLOYMENT.md). Each deploy of `main`
+# (triggered in Coolify) rebuilds and redeploys. One `app` service answers for ashabajasper.dev,
 # www.ashabajasper.dev, blog.ashabajasper.dev and admin.ashabajasper.dev.
 #
 # Coolify's Traefik terminates TLS and forwards every domain assigned to the

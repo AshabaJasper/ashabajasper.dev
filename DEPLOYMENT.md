@@ -1,12 +1,27 @@
 # Deployment
 
-Production runs as one Coolify application on the existing Coolify server (a VPS), built
-from `docker-compose.coolify.yml` in the public GitHub repository
-`AshabaJasper/ashabajasper.dev` and redeployed on every push to `main`, as approved by the owner.
+Production runs as one Coolify application on the owner's Hostinger VPS (Manchester),
+built with the Docker Compose build pack from `docker-compose.coolify.yml` in the public
+GitHub repository `AshabaJasper/ashabajasper.dev`, branch `main`.
 
 This document never holds real secrets, the server IP, user names or Coolify uuids.
 Placeholders: `<VPS_IP>` is the server's public IPv4 address, `<COOLIFY_URL>` is the
-address of the Coolify dashboard, `<user>` is your login on the server.
+address of the Coolify dashboard, `<app-uuid>` is the application's Coolify uuid,
+`<COOLIFY_API_TOKEN>` is a Coolify API token, `<INDEXNOW_KEY>` is the 32-character hex
+name of the key file in `public/`, `<user>` is your login on the server.
+
+## Current status (checked 8 October 2026)
+
+| Step | Status |
+| --- | --- |
+| DNS, Coolify application, TLS (Let's Encrypt) | Done. All three hosts answer over HTTPS; `www` answers 308 to the apex. |
+| Deploys | Manual: push to `main`, then trigger a deploy (section 5). |
+| GitHub webhook for auto-deploy | Optional, **not set up** (section 5). |
+| Owner account (`/setup`) | `https://admin.ashabajasper.dev/setup` reports "Setup is complete", so an owner account exists. Still to confirm: `SETUP_TOKEN` removed from Coolify and the app redeployed (section 7). |
+| Umami analytics | **Not deployed.** `stats.ashabajasper.dev` does not answer; the code is ready (section 8). |
+| IndexNow | Every sitemap URL submitted on 8 October 2026 and accepted with 202 (section 12). |
+| Google Search Console, Bing Webmaster Tools | **Owner to do** (section 12). |
+| Backups | See section 9. |
 
 Contents:
 
@@ -14,13 +29,14 @@ Contents:
 2. [DNS at Hostinger](#2-dns-at-hostinger)
 3. [The Coolify application](#3-the-coolify-application)
 4. [Environment variables](#4-environment-variables)
-5. [Auto-deploy webhook](#5-auto-deploy-webhook)
+5. [Deploying, and the optional webhook](#5-deploying-and-the-optional-webhook)
 6. [First deploy](#6-first-deploy)
 7. [One-time owner setup](#7-one-time-owner-setup)
 8. [Analytics: Umami at stats.ashabajasper.dev](#8-analytics-umami-at-statsashabajasperdev)
 9. [Backups](#9-backups)
 10. [Verification checklist](#10-verification-checklist)
 11. [Doing everything through the Coolify web UI](#11-doing-everything-through-the-coolify-web-ui)
+12. [Search and AI discovery](#12-search-and-ai-discovery)
 
 Day-2 operations (rollback, restore, rotating secrets, lockout, spam, logs) are in
 [docs/RUNBOOK.md](docs/RUNBOOK.md).
@@ -53,8 +69,8 @@ parking A record or a `www` CNAME), or they will conflict.
 | A | `stats` | `<VPS_IP>` | 300 |
 | CNAME | `www` | `ashabajasper.dev` | 300 |
 
-The `os` record serves the separate private Jasper OS application. Keep it configured;
-it is not added as a domain of this public application.
+The `os` record serves a separate private application on the same server. Keep it
+configured; it is not a domain of this public application.
 
 **Wait for DNS before adding domains in Coolify.** Coolify asks Let's Encrypt for a
 certificate as soon as a domain is saved, and Let's Encrypt rate-limits failed
@@ -130,10 +146,25 @@ A change to either needs a redeploy (a rebuild), not a restart.
 
 The meaning of every variable is in the README table and `.env.example`.
 
-## 5. Auto-deploy webhook
+## 5. Deploying, and the optional webhook
 
-A public repository is not connected through a GitHub App, so Coolify learns about pushes
-from a manual webhook:
+**Today a push does not deploy.** Coolify has no GitHub App or webhook for this public
+repository, so after `git push origin main` trigger the deploy yourself, either:
+
+- in Coolify: the application, **Deploy** (or **Redeploy**), or
+- through the Coolify API, with a token created in Coolify (Keys & Tokens) and never
+  committed:
+
+  ```bash
+  curl -s -X POST -H "Authorization: Bearer <COOLIFY_API_TOKEN>" \
+    "<COOLIFY_URL>/api/v1/deploy?uuid=<app-uuid>"
+  ```
+
+Then watch the deployment log until `migrate` exits 0 and `app` is healthy. Changes that
+only touch docs need no deploy.
+
+**Optional, not set up yet: the auto-deploy webhook.** To make every push to `main`
+deploy by itself, add a manual webhook:
 
 1. In Coolify, open the application, **Webhooks**. Copy the manual GitHub webhook URL
    (`<COOLIFY_URL>/webhooks/source/github/events/manual`) and set a **GitHub Webhook
@@ -157,6 +188,11 @@ from a manual webhook:
 
 ## 7. One-time owner setup
 
+**Status, 8 October 2026:** `/setup` answers "Setup is complete", which the page shows
+only when an owner account exists in the database. Steps 4 and 5 (remove `SETUP_TOKEN`,
+redeploy, confirm it is gone) remain for the owner to confirm. The steps below are kept
+for a rebuild from scratch.
+
 1. Open `https://admin.ashabajasper.dev/setup`.
 2. Enter the `SETUP_TOKEN` from Coolify, the owner's name, email and a long password.
    The page only works while no owner exists; after that it refuses every request.
@@ -170,6 +206,11 @@ from a manual webhook:
    complete" once the owner exists.
 
 ## 8. Analytics: Umami at stats.ashabajasper.dev
+
+**Status, 8 October 2026: pending.** Umami is not deployed and the two
+`NEXT_PUBLIC_UMAMI_` variables are empty, so production loads no analytics script. The
+code is ready. When Umami is deployed, change its default `admin` / `umami` login before
+anything else (step 3).
 
 Umami is cookieless and stores no personal data, which is why the site needs no cookie
 banner (see the checklist). It runs as a separate Coolify service, not inside this
@@ -245,6 +286,11 @@ curl -s  https://ashabajasper.dev/robots.txt                       # Sitemap: ht
 curl -s  https://ashabajasper.dev/sitemap.xml | head -n 5          # absolute https://ashabajasper.dev URLs
 curl -s  https://ashabajasper.dev | grep -o '<meta property="og:image" content="[^"]*"'
 curl -s  https://ashabajasper.dev | grep -c stats.ashabajasper.dev # 1 once Umami is configured
+curl -sI https://ashabajasper.dev/llms.txt | head -n 1             # HTTP/2 200, text/markdown
+curl -sI https://ashabajasper.dev/llms-full.txt | head -n 1        # HTTP/2 200
+curl -sI https://ashabajasper.dev/<INDEXNOW_KEY>.txt | head -n 1   # HTTP/2 200 (not rewritten by the middleware)
+curl -sI https://ashabajasper.dev/og | grep -i content-type        # image/png
+curl -sI https://ashabajasper.dev/cv/Ashaba-Joshua-Jasper-CV-2026.pdf | grep -i content-type   # application/pdf
 ```
 
 **www, `www.ashabajasper.dev`:**
@@ -261,6 +307,7 @@ curl -sI https://blog.ashabajasper.dev | grep -ci set-cookie       # 0
 curl -s  https://blog.ashabajasper.dev/robots.txt                  # Sitemap: https://blog.ashabajasper.dev/sitemap.xml
 curl -s  https://blog.ashabajasper.dev/sitemap.xml | head -n 5
 curl -sI https://blog.ashabajasper.dev/feed.xml | head -n 1        # HTTP/2 200
+curl -sI https://blog.ashabajasper.dev/llms.txt | head -n 1        # HTTP/2 200 (llms-full.txt is portfolio only)
 curl -sI https://blog.ashabajasper.dev/no-such-post | head -n 1    # HTTP/2 404
 curl -sI https://blog.ashabajasper.dev/api/contact | head -n 1     # HTTP/2 404 (contact is portfolio only)
 ```
@@ -305,8 +352,9 @@ genuinely need a shell (installing the backup cron, restoring a dump) are marked
 6. **Variables:** Environment Variables, **Developer view**, paste the variables from
    section 4 as `NAME=value` lines, Save. Then open each `NEXT_PUBLIC_UMAMI_` variable
    and tick "Build Variable"; make sure no other variable has it ticked.
-7. **Webhook:** Webhooks tab, set the GitHub webhook secret, Save, copy the manual
-   GitHub URL. In GitHub, Settings, Webhooks, add it as in section 5.
+7. **Webhook (optional, not set up today):** Webhooks tab, set the GitHub webhook
+   secret, Save, copy the manual GitHub URL. In GitHub, Settings, Webhooks, add it as in
+   section 5. Without it, every release needs a Deploy press after the push.
 8. **Deploy:** press **Deploy**, open the deployment, follow the logs until `app` is
    healthy. If it fails, the log names the step: build, `migrate` or health check.
 9. **Owner:** open `https://admin.ashabajasper.dev/setup`, complete it with the
@@ -328,3 +376,54 @@ genuinely need a shell (installing the backup cron, restoring a dump) are marked
     are not a replacement.
 14. **Rollback:** Deployments tab, pick an earlier successful deployment, **Redeploy**
     (details in `docs/RUNBOOK.md`).
+
+## 12. Search and AI discovery
+
+These files are served by the app itself; nothing is configured in Coolify.
+
+| URL | Hosts | Built by |
+| --- | --- | --- |
+| `/robots.txt` | portfolio, blog | `robotsBody()` in `src/lib/crawlers.ts`: everyone allowed, the AI crawlers named in their own allowed group, the sitemap and llms.txt linked. The portfolio also disallows `/contact/thanks`. The admin answers `Disallow: /`. |
+| `/sitemap.xml` | portfolio, blog | `src/app/<site>/sitemap.xml/route.ts`, absolute `https://` URLs from `siteUrl()`. |
+| `/llms.txt` | portfolio, blog | `buildLlmsTxt()` in `src/lib/llms.ts`: who the owner is, the main pages and every post. |
+| `/llms-full.txt` | portfolio | `buildLlmsFullTxt()`: CV summary, experience, projects, case studies, all 47 projects and every post body. |
+| `/<INDEXNOW_KEY>.txt` | portfolio, blog | The IndexNow key file in `public/`. The middleware matcher skips any 32-hex `.txt`, so it is served as a static file on every host. |
+
+JSON-LD (`src/lib/structured-data.ts`) links every page to one Person `@id`, and the
+`rel="me"` head links (`src/components/shared/identity-links.tsx`) tie the site to the
+owner's other profiles.
+
+### Resubmit to IndexNow
+
+Do this after publishing a post or changing pages, once the deploy is live. IndexNow
+shares submissions with Bing and other participating engines. Each host is submitted on
+its own, with the URLs from its own sitemap (needs `curl` and `jq`):
+
+```bash
+KEY=<INDEXNOW_KEY>
+for HOST in ashabajasper.dev blog.ashabajasper.dev; do
+  URLS=$(curl -s "https://$HOST/sitemap.xml" | grep -o '<loc>[^<]*' | sed 's/<loc>//' | jq -R . | jq -s -c .)
+  curl -s -o /dev/null -w "$HOST %{http_code}\n" -X POST https://api.indexnow.org/indexnow \
+    -H 'Content-Type: application/json; charset=utf-8' \
+    -d "{\"host\":\"$HOST\",\"key\":\"$KEY\",\"keyLocation\":\"https://$HOST/$KEY.txt\",\"urlList\":$URLS}"
+done
+```
+
+`200` or `202` means accepted. `403` means the key file was not found or does not match;
+check `https://<host>/<INDEXNOW_KEY>.txt` first. Every sitemap URL was submitted this way
+on 8 October 2026 and accepted with 202.
+
+### Google Search Console and Bing Webmaster Tools (owner to do)
+
+Not done yet. Both need the owner's own accounts.
+
+1. **Google Search Console:** add a **Domain** property for `ashabajasper.dev`. Google
+   shows a TXT record; add it in Hostinger hPanel, DNS, for the name `@`, then press
+   Verify. A domain property covers the apex and every subdomain. Open Sitemaps and
+   submit `https://ashabajasper.dev/sitemap.xml` and
+   `https://blog.ashabajasper.dev/sitemap.xml`.
+2. **Bing Webmaster Tools:** sign in, then **Import from Google Search Console** (fastest
+   once step 1 is done), or add the site and verify it with the DNS option. Submit the
+   same two sitemaps.
+3. Do not add verification meta tags or files to the repository unless a provider
+   insists; the DNS record keeps verification out of the code.

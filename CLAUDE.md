@@ -43,6 +43,17 @@ every path into that folder. Read `docs/ARCHITECTURE.md` before structural work 
 - **Every page** exports a title and its own description, and every icon-only button has
   an `aria-label` (`tests/page-metadata.test.ts`, `tests/icon-buttons.test.ts`).
 - **Website standard:** keep `docs/WEBSITE_STANDARD_CHECKLIST.md` current.
+- **Never mention the owner's private life dashboard** on the public sites: not in pages,
+  posts, data, `llms.txt`, structured data or these public docs. It is deliberately
+  absent.
+- **The CV download** is `public/cv/Ashaba-Joshua-Jasper-CV-2026.pdf`, the owner's own
+  file. The referees' phone numbers and emails must stay removed by true redaction (not
+  a box drawn over text); the owner's own phone numbers stay at his request. Do not
+  generate a CV PDF from code or add a script for it.
+- **SEO and AI discovery** live in `src/lib/llms.ts` (llms.txt, llms-full.txt),
+  `src/lib/crawlers.ts` (robots.txt groups), `src/lib/structured-data.ts` (JSON-LD with
+  one Person `@id`) and `src/components/shared/identity-links.tsx` (rel=me). Keep the
+  IndexNow key file in `public/` and its exception in the middleware matcher.
 
 ## Commands
 
@@ -68,4 +79,7 @@ Run typecheck, lint and test separately before every commit and read each exit c
 ## Commits
 
 `Area: description` as the subject, a body that explains why, what was left out and what
-was verified. `main` deploys production through Coolify on push.
+was verified. Production is built from `main`, but a push does not deploy by itself:
+there is no GitHub webhook yet. After pushing, the owner (or an agent he authorises)
+triggers the deploy in Coolify, with the Deploy button or the deploy API. Deploys are the
+owner's call. Docs-only changes need no deploy.
